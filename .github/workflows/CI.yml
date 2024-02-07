@@ -30,31 +30,31 @@ jobs:
         id: version
         run: |
           # Get version number from pubspec.yaml
-          version_number=$(grep '^version' ./pubspec.yaml | cut -f 2 -d ' ' | cut -f 1 -d '+')
-          subversion_number=0
+          version_num=$(grep '^version' ./pubspec.yaml | cut -f 2 -d ' ' | cut -f 1 -d '+')
+          subversion_num=0
           
           #branch=$(git rev-parse --abbrev-ref HEAD)
           if [[ $GITHUB_REF_NAME == "main" ]]; then
-            subversion_level=beta
+            subversion_lv=beta
           elif [[ $GITHUB_REF_NAME == "alpha" ]]; then
-            subversion_level=alpha
+            subversion_lv=alpha
           else
             echo "Action is triggered on an unexpected branch!"
             exit 1
           fi
           
           # 获取最新beta/alpha版tag
-          tag=$(git tag --sort -v:refname | grep "$subversion_level" -m 1)
+          tag=$(git tag --sort -v:refname | grep "$subversion_lv" -m 1)
           
-          if (echo x$tag | grep -q $version_number); then
+          if (echo x$tag | grep -q $version_num); then
             # 当前版本下有beta/alpha版本
-            # 从tag中取得subversion_number
+            # 从tag中取得subversion_num
             subversion=$(echo $tag | cut -d '.' -f 4)
-            subversion_number=${subversion#$subversion_level}
+            subversion_num=${subversion#$subversion_lv}
           fi
           
-          let subversion_number++
-          version=v$version_number.$subversion_level$subversion_number
+          let subversion_num++
+          version=v$version_num.$subversion_lv$subversion_num
           echo "version=$version" >> $GITHUB_OUTPUT
 
   android: 
