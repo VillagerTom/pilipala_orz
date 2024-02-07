@@ -16,6 +16,8 @@ on:
 jobs:
   set-version:
     name: 设定版本号
+    outputs:
+      version: ${{ steps.version.outputs.version}}
     runs-on: ubuntu-latest
     steps:
       - name: 代码签出
@@ -25,6 +27,7 @@ jobs:
         
 
       - name: 计算新版本号
+        id: version
         run: |
           # Get version number from pubspec.yaml
           version_number=$(grep '^version' ./pubspec.yaml | cut -f 2 -d ' ' | cut -f 1 -d '+')
