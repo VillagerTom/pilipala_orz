@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
+        
 
       - name: 计算新版本号
         run: |
@@ -51,7 +52,7 @@ jobs:
           
           let subversion_number++
           version=v$version_number.$subversion_level$subversion_number
-          echo "version=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
 
   android: 
     needs: set-version
