@@ -53,7 +53,7 @@ jobs:
           echo "hello"
           version=${{ steps.get-main-version.outputs.version }}
           echo "hello"
-          tag=$(git tag --sort -v:refname | grep "$prerelease_stage" -m 1)
+          # tag=$(git tag --sort -v:refname | grep "$prerelease_stage" -m 1)
           echo "hello"
           if (echo x$tag | grep -q $version); then
             echo "hello"
