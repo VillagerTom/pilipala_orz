@@ -48,7 +48,7 @@ jobs:
       - name: 获取构建号
         id: get-build-num
         run: |
-          prerelease_stage=${{ steps.get-prerelease-stage.output.stage }}
+          prerelease_stage=${{ steps.get-prerelease-stage.outputs.stage }}
           tag=$(git tag --sort -v:refname | grep "$prerelease_stage" -m 1)
           if (echo x$tag | grep -q $version_num); then
             prerelease_version=$(echo $tag | cut -d '.' -f 4)
