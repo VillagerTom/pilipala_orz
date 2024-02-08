@@ -48,28 +48,17 @@ jobs:
       - name: 获取构建号
         id: get-build-num
         run: |
-          {
-            echo "hello0"
-            prerelease_stage=${{ steps.get-prerelease-stage.outputs.stage }}
-            echo "hello1"
-            version=${{ steps.get-main-version.outputs.version }}
-            echo "hello2"
-            tag=$(git tag --sort -v:refname | grep "$prerelease_stage" -m 1)
-            if (echo x$tag | grep -q $version); then
-              echo "hello3"
-              build_num=$(echo $tag | cut -d "-" -f 2 | cut -d "." -f 2)
-              echo "hello4"
-            else
-              echo "hello5"
-              build_num=0
-              echo "hello6"
-            fi
-            echo "hello7"
-            let build_num++
-            echo "hello8"
-            echo "num=$build_num" >> $GITHUB_OUTPUT
-            echo "hello9"
-          }
+          prerelease_stage=${{ steps.get-prerelease-stage.outputs.stage }}
+          version=${{ steps.get-main-version.outputs.version }}
+          tag=$(git tag --sort -v:refname | grep "$prerelease_stage" -m 1 || true)
+          echo "hello"
+          if (echo x$tag | grep -q $version); then
+            build_num=$(echo $tag | cut -d "-" -f 2 | cut -d "." -f 2)
+          else
+            build_num=0
+          fi
+          let ++build_num
+          echo "num=$build_num" >> $GITHUB_OUTPUT
       
       - name: 拼接版本号
         id: new-version
