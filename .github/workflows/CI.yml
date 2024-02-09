@@ -23,14 +23,14 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
       
-      - name: 获取主版本号
-        id: get-main-version
+      - name: 获取发行版本号
+        id: get-release-version
         run: |
           # Get version number from pubspec.yaml
           version=$(grep '^version' ./pubspec.yaml | cut -f 2 -d ' ' | cut -f 1 -d '+')
           echo "version=$version" >> $GITHUB_OUTPUT
       
-      - name: 确定预发布阶段
+      - name: 确定预发行阶段
         id: get-prerelease-stage
         run: |
           #branch=$(git rev-parse --abbrev-ref HEAD)
@@ -49,7 +49,7 @@ jobs:
         id: get-build-num
         run: |
           prerelease_stage=${{ steps.get-prerelease-stage.outputs.stage }}
-          version=${{ steps.get-main-version.outputs.version }}
+          version=${{ steps.get-release-version.outputs.version }}
           tag=$(git tag --sort -v:refname | grep "$prerelease_stage" -m 1 || true)
           if (echo x$tag | grep -q $version); then
             build_num=$(echo $tag | cut -d "-" -f 2 | cut -d "." -f 2)
@@ -62,7 +62,7 @@ jobs:
       - name: 拼接版本号
         id: new-version
         run: |
-          version=${{ steps.get-main-version.outputs.version }}
+          version=${{ steps.get-release-version.outputs.version }}
           prerelease_stage=${{ steps.get-prerelease-stage.outputs.stage }}
           build_num=${{ steps.get-build-num.outputs.num }}
           new_version=$version-$prerelease_stage.$build_num
