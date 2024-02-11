@@ -31,6 +31,7 @@ Box localCache = GStrorage.localCache;
 class PlPlayerController {
   Player? _videoPlayerController;
   VideoController? _videoController;
+  void Function({bool? status})? triggerFullscreenCallback;
 
   // 添加一个私有静态变量来保存实例
   static PlPlayerController? _instance;
@@ -231,6 +232,11 @@ class PlPlayerController {
 
   // 播放顺序相关
   PlayRepeat playRepeat = PlayRepeat.pause;
+
+  void setTriggerFullscreenCallback(
+      void Function({bool? status}) triggerFullscreenCallback) {
+    this.triggerFullscreenCallback = triggerFullscreenCallback;
+  }
 
   void updateSliderPositionSecond() {
     int newSecond = _sliderPosition.value.inSeconds;
@@ -996,10 +1002,13 @@ class PlPlayerController {
       StatusBarControl.setHidden(false, animation: StatusBarAnimation.FADE);
       // Get.back();
       exitFullScreen();
-      if (setting.get(SettingBoxKey.exitFullscreenAutoVertical, defaultValue: true)) {
+      if (!setting.get(SettingBoxKey.horizontalScreen, defaultValue: false)) {
         await verticalScreen();
       }
       toggleFullScreen(false);
+    }
+    if (triggerFullscreenCallback != null) {
+      triggerFullscreenCallback!(status: status);
     }
   }
 
