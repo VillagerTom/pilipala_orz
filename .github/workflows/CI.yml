@@ -51,7 +51,8 @@ jobs:
           prerelease_stage=${{ steps.get-prerelease-stage.outputs.stage }}
           version=${{ steps.get-release-version.outputs.version }}
           tag=$(git tag --sort -v:refname | grep "$prerelease_stage" -m 1 || true)
-          if (echo x$tag | grep -q $version); then
+          echo $tag
+          if (echo x$tag | grep $version); then
             build_num=$(echo $tag | cut -d "-" -f 2 | cut -d "." -f 2)
           else
             build_num=0
