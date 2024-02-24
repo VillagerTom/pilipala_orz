@@ -588,7 +588,7 @@ InlineSpan buildContent(
   if (patternStr.isNotEmpty) {
     patternStr += "|";
   }
-  patternStr += r'(\b(?:\d+[:：])?[0-5]?[0-9][:：][0-5]?[0-9]\b)';
+  patternStr += r'(\b\d{1,2}[:：]\d{2}\b)';
   final RegExp pattern = RegExp(patternStr);
   List<String> matchedStrs = [];
   void addPlainTextSpan(str) {
