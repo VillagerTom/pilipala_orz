@@ -4,25 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/constants.dart';
-import 'package:pilipala/http/user.dart';
-import 'package:pilipala/http/video.dart';
-import 'package:pilipala/models/user/fav_folder.dart';
-import 'package:pilipala/models/video/ai.dart';
-import 'package:pilipala/models/video_detail_res.dart';
-import 'package:pilipala/pages/video/detail/controller.dart';
-import 'package:pilipala/pages/video/detail/reply/index.dart';
-import 'package:pilipala/plugin/pl_player/models/play_repeat.dart';
-import 'package:pilipala/utils/feed_back.dart';
-import 'package:pilipala/utils/id_utils.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/constants.dart';
+import 'package:PiliPalaX/http/user.dart';
+import 'package:PiliPalaX/http/video.dart';
+import 'package:PiliPalaX/models/user/fav_folder.dart';
+import 'package:PiliPalaX/models/video/ai.dart';
+import 'package:PiliPalaX/models/video_detail_res.dart';
+import 'package:PiliPalaX/pages/video/detail/controller.dart';
+import 'package:PiliPalaX/pages/video/detail/reply/index.dart';
+import 'package:PiliPalaX/plugin/pl_player/models/play_repeat.dart';
+import 'package:PiliPalaX/utils/feed_back.dart';
+import 'package:PiliPalaX/utils/id_utils.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../related/index.dart';
 import 'widgets/group_panel.dart';
 
 class VideoIntroController extends GetxController {
   // 视频bvid
-  String bvid = Get.parameters['bvid']!;
+  late String bvid;
 
   // 是否预渲染 骨架屏
   bool preRender = false;
@@ -71,6 +72,7 @@ class VideoIntroController extends GetxController {
     userInfo = userInfoCache.get('userInfoCache');
     try {
       heroTag = Get.arguments['heroTag'];
+      bvid = Get.parameters['bvid']!;
     } catch (_) {}
     if (Get.arguments.isNotEmpty) {
       if (Get.arguments.containsKey('videoItem')) {
@@ -295,6 +297,7 @@ class VideoIntroController extends GetxController {
   Future actionFavVideo({type = 'choose'}) async {
     // 收藏至默认文件夹
     if (type == 'default') {
+      SmartDialog.showLoading(msg: '请求中');
       await queryVideoInFolder();
       int defaultFolderId = favFolderData.value.list!.first.id!;
       int favStatus = favFolderData.value.list!.first.favState!;
@@ -303,12 +306,11 @@ class VideoIntroController extends GetxController {
         addIds: favStatus == 0 ? '$defaultFolderId' : '',
         delIds: favStatus == 1 ? '$defaultFolderId' : '',
       );
+      SmartDialog.dismiss();
       if (result['status']) {
-        if (result['data']['prompt']) {
-          // 重新获取收藏状态
-          await queryHasFavVideo();
-          SmartDialog.showToast('✅ 操作成功');
-        }
+        // 重新获取收藏状态
+        await queryHasFavVideo();
+        SmartDialog.showToast('✅ 快速收藏/取消收藏成功');
       } else {
         SmartDialog.showToast(result['msg']);
       }
@@ -333,14 +335,12 @@ class VideoIntroController extends GetxController {
         delIds: delMediaIdsNew.join(','));
     SmartDialog.dismiss();
     if (result['status']) {
-      if (result['data']['prompt']) {
-        addMediaIdsNew = [];
-        delMediaIdsNew = [];
-        Get.back();
-        // 重新获取收藏状态
-        await queryHasFavVideo();
-        SmartDialog.showToast('✅ 操作成功');
-      }
+      addMediaIdsNew = [];
+      delMediaIdsNew = [];
+      Get.back();
+      // 重新获取收藏状态
+      await queryHasFavVideo();
+      SmartDialog.showToast('✅ 操作成功');
     } else {
       SmartDialog.showToast(result['msg']);
     }
@@ -478,11 +478,15 @@ class VideoIntroController extends GetxController {
     // 重新获取视频资源
     final VideoDetailController videoDetailCtr =
         Get.find<VideoDetailController>(tag: heroTag);
+    final ReleatedController releatedCtr =
+        Get.find<ReleatedController>(tag: heroTag);
     videoDetailCtr.bvid = bvid;
-    videoDetailCtr.oid.value = aid;
+    videoDetailCtr.oid.value = aid ?? IdUtils.bv2av(bvid);
     videoDetailCtr.cid.value = cid;
     videoDetailCtr.danmakuCid.value = cid;
     videoDetailCtr.queryVideoUrl();
+    releatedCtr.bvid = bvid;
+    releatedCtr.queryRelatedVideo();
     // 重新请求评论
     try {
       /// 未渲染回复组件时可能异常

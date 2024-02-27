@@ -1,24 +1,27 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:floating/floating.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:ns_danmaku/ns_danmaku.dart';
-import 'package:pilipala/http/user.dart';
-import 'package:pilipala/models/video/play/quality.dart';
-import 'package:pilipala/models/video/play/url.dart';
-import 'package:pilipala/pages/video/detail/index.dart';
-import 'package:pilipala/pages/video/detail/introduction/widgets/menu_row.dart';
-import 'package:pilipala/plugin/pl_player/index.dart';
-import 'package:pilipala/plugin/pl_player/models/play_repeat.dart';
-import 'package:pilipala/utils/storage.dart';
-import 'package:pilipala/http/danmaku.dart';
-import 'package:pilipala/services/shutdown_timer_service.dart';
+import 'package:PiliPalaX/http/user.dart';
+import 'package:PiliPalaX/models/video/play/quality.dart';
+import 'package:PiliPalaX/models/video/play/url.dart';
+import 'package:PiliPalaX/pages/video/detail/index.dart';
+import 'package:PiliPalaX/pages/video/detail/introduction/widgets/menu_row.dart';
+import 'package:PiliPalaX/plugin/pl_player/index.dart';
+import 'package:PiliPalaX/plugin/pl_player/models/play_repeat.dart';
+import 'package:PiliPalaX/utils/storage.dart';
+import 'package:PiliPalaX/http/danmaku.dart';
+import 'package:PiliPalaX/services/shutdown_timer_service.dart';
+import '../../../../models/video_detail_res.dart';
+import '../introduction/index.dart';
+import 'package:marquee/marquee.dart';
 
 class HeaderControl extends StatefulWidget implements PreferredSizeWidget {
   const HeaderControl({
@@ -46,13 +49,39 @@ class _HeaderControlState extends State<HeaderControl> {
   Size get preferredSize => const Size(double.infinity, kToolbarHeight);
   final Box<dynamic> localCache = GStrorage.localCache;
   final Box<dynamic> videoStorage = GStrorage.video;
-  late List<double> speedsList;
   double buttonSpace = 8;
+  bool isFullScreen = false;
+  late String heroTag;
+  late VideoIntroController videoIntroController;
+  late VideoDetailData videoDetail;
+  late StreamSubscription<bool> fullScreenStatusListener;
+  late bool horizontalScreen;
+
   @override
   void initState() {
     super.initState();
     videoInfo = widget.videoDetailCtr!.data;
-    speedsList = widget.controller!.speedsList;
+    listenFullScreenStatus();
+    heroTag = Get.arguments['heroTag'];
+    videoIntroController = Get.put(VideoIntroController(), tag: heroTag);
+    horizontalScreen =
+        setting.get(SettingBoxKey.horizontalScreen, defaultValue: false);
+  }
+
+  void listenFullScreenStatus() {
+    fullScreenStatusListener = widget
+        .videoDetailCtr!.plPlayerController.isFullScreen
+        .listen((bool status) {
+      isFullScreen = status;
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.floating?.dispose();
+    fullScreenStatusListener.cancel();
+    super.dispose();
   }
 
   /// 设置面板
@@ -397,65 +426,6 @@ class _HeaderControlState extends State<HeaderControl> {
     );
   }
 
-  /// 选择倍速
-  void showSetSpeedSheet() {
-    final double currentSpeed = widget.controller!.playbackSpeed;
-    showDialog(
-      context: Get.context!,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('播放速度'),
-          content: StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-            return Wrap(
-              spacing: 8,
-              runSpacing: 2,
-              children: [
-                for (final double i in speedsList) ...<Widget>[
-                  if (i == currentSpeed) ...<Widget>[
-                    FilledButton(
-                      onPressed: () async {
-                        // setState(() => currentSpeed = i),
-                        await widget.controller!.setPlaybackSpeed(i);
-                        Get.back();
-                      },
-                      child: Text(i.toString()),
-                    ),
-                  ] else ...[
-                    FilledButton.tonal(
-                      onPressed: () async {
-                        // setState(() => currentSpeed = i),
-                        await widget.controller!.setPlaybackSpeed(i);
-                        Get.back();
-                      },
-                      child: Text(i.toString()),
-                    ),
-                  ]
-                ]
-              ],
-            );
-          }),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => SmartDialog.dismiss(),
-              child: Text(
-                '取消',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                await widget.controller!.setDefaultSpeed();
-                Get.back();
-              },
-              child: const Text('默认速度'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   /// 选择画质
   void showSetVideoQa() {
     final List<FormatItem> videoFormat = videoInfo.supportFormats!;
@@ -656,7 +626,7 @@ class _HeaderControlState extends State<HeaderControl> {
           margin: const EdgeInsets.all(12),
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
                   height: 45,
                   child: Center(child: Text('选择解码格式', style: titleStyle))),
               Expanded(
@@ -1042,10 +1012,8 @@ class _HeaderControlState extends State<HeaderControl> {
   @override
   Widget build(BuildContext context) {
     final _ = widget.controller!;
-    const TextStyle textStyle = TextStyle(
-      color: Colors.white,
-      fontSize: 12,
-    );
+    final bool isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     return AppBar(
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
@@ -1057,6 +1025,7 @@ class _HeaderControlState extends State<HeaderControl> {
       titleSpacing: 14,
       title: Row(
         children: [
+          // SizedBox(width: MediaQuery.of(context).padding.left,),
           ComBtn(
             icon: const Icon(
               FontAwesomeIcons.arrowLeft,
@@ -1070,33 +1039,72 @@ class _HeaderControlState extends State<HeaderControl> {
                 <void>{
                   if (MediaQuery.of(context).orientation ==
                           Orientation.landscape &&
-                      !setting.get(SettingBoxKey.horizontalScreen,
-                          defaultValue: false))
+                      !horizontalScreen)
                     {
-                      SystemChrome.setPreferredOrientations([
-                        DeviceOrientation.portraitUp,
-                      ])
+                      verticalScreen(),
                     },
                   Get.back()
                 }
             },
           ),
           SizedBox(width: buttonSpace),
-          ComBtn(
-            icon: const Icon(
-              FontAwesomeIcons.house,
-              size: 15,
-              color: Colors.white,
+          if ((videoIntroController.videoDetail.value.title != null) && (isFullScreen ||
+              (!isFullScreen && isLandscape && !horizontalScreen))) ...[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxWidth: isLandscape ? 400 : 150, maxHeight: 20),
+                  child: Marquee(
+                    text: videoIntroController.videoDetail.value.title!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    scrollAxis: Axis.horizontal,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    blankSpace: 200,
+                    velocity: 40,
+                    startAfter: const Duration(seconds: 1),
+                    showFadingOnlyWhenScrolling: true,
+                    fadingEdgeStartFraction: 0.1,
+                    fadingEdgeEndFraction: 0.1,
+                    numberOfRounds: 1,
+                    startPadding: 0,
+                    accelerationDuration: const Duration(seconds: 1),
+                    accelerationCurve: Curves.linear,
+                    decelerationDuration: const Duration(milliseconds: 500),
+                    decelerationCurve: Curves.easeOut,
+                  ),
+                ),
+                if (videoIntroController.isShowOnlineTotal)
+                  Text(
+                    '${videoIntroController.total.value}人正在看',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  )
+              ],
+            )
+          ] else ...[
+            ComBtn(
+              icon: const Icon(
+                FontAwesomeIcons.house,
+                size: 15,
+                color: Colors.white,
+              ),
+              fuc: () async {
+                // 销毁播放器实例
+                // await widget.controller!.dispose(type: 'all');
+                if (mounted) {
+                  Navigator.popUntil(
+                      context, (Route<dynamic> route) => route.isFirst);
+                }
+              },
             ),
-            fuc: () async {
-              // 销毁播放器实例
-              await widget.controller!.dispose(type: 'all');
-              if (mounted) {
-                Navigator.popUntil(
-                    context, (Route<dynamic> route) => route.isFirst);
-              }
-            },
-          ),
+          ],
           const Spacer(),
           // ComBtn(
           //   icon: const Icon(
@@ -1107,19 +1115,21 @@ class _HeaderControlState extends State<HeaderControl> {
           //   fuc: () => _.screenshot(),
           // ),
           SizedBox(
-            width: 56,
+            width: 34,
             height: 34,
-            child: TextButton(
+            child: IconButton(
               style: ButtonStyle(
                 padding: MaterialStateProperty.all(EdgeInsets.zero),
               ),
               onPressed: () => showShootDanmakuSheet(),
-              child: const Text(
-                '发弹幕',
-                style: textStyle,
+              icon: const Icon(
+                Icons.add_card_outlined,
+                size: 19,
+                color: Colors.white,
               ),
             ),
           ),
+          SizedBox(width: buttonSpace),
           SizedBox(
             width: 34,
             height: 34,
@@ -1151,13 +1161,9 @@ class _HeaderControlState extends State<HeaderControl> {
                   padding: MaterialStateProperty.all(EdgeInsets.zero),
                 ),
                 onPressed: () async {
-                  bool canUsePiP = false;
+                  bool canUsePiP = widget.floating != null &&
+                      await widget.floating!.isPipAvailable;
                   widget.controller!.hiddenControls(false);
-                  try {
-                    canUsePiP = await widget.floating!.isPipAvailable;
-                  } on PlatformException catch (_) {
-                    canUsePiP = false;
-                  }
                   if (canUsePiP) {
                     final Rational aspectRatio = Rational(
                       widget.videoDetailCtr!.data.dash!.video!.first.width!,
@@ -1175,23 +1181,6 @@ class _HeaderControlState extends State<HeaderControl> {
             ),
             SizedBox(width: buttonSpace),
           ],
-          Obx(
-            () => SizedBox(
-              width: 45,
-              height: 34,
-              child: TextButton(
-                style: ButtonStyle(
-                  padding: MaterialStateProperty.all(EdgeInsets.zero),
-                ),
-                onPressed: () => showSetSpeedSheet(),
-                child: Text(
-                  '${_.playbackSpeed}X',
-                  style: textStyle,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: buttonSpace),
           ComBtn(
             icon: const Icon(
               Icons.more_vert_outlined,

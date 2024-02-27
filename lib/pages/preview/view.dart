@@ -8,7 +8,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:pilipala/utils/download.dart';
+import 'package:PiliPalaX/utils/download.dart';
 import 'controller.dart';
 import 'package:status_bar_control/status_bar_control.dart';
 
@@ -102,14 +102,11 @@ class _ImagePreviewState extends State<ImagePreview>
     );
   }
 
-  // 设置状态栏图标透明
+  // 隐藏状态栏，避免遮挡图片内容
   setStatusBar() async {
-    if (Platform.isIOS) {
+    if (Platform.isIOS || Platform.isAndroid) {
       await StatusBarControl.setHidden(true,
           animation: StatusBarAnimation.SLIDE);
-    }
-    if (Platform.isAndroid) {
-      await StatusBarControl.setColor(Colors.transparent);
     }
   }
 

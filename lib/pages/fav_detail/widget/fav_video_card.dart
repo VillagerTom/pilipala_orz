@@ -1,23 +1,28 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:pilipala/common/constants.dart';
-import 'package:pilipala/common/widgets/stat/danmu.dart';
-import 'package:pilipala/common/widgets/stat/view.dart';
-import 'package:pilipala/http/search.dart';
-import 'package:pilipala/http/video.dart';
-import 'package:pilipala/models/common/search_type.dart';
-import 'package:pilipala/utils/id_utils.dart';
-import 'package:pilipala/utils/utils.dart';
-import 'package:pilipala/common/widgets/network_img_layer.dart';
+import 'package:PiliPalaX/common/constants.dart';
+import 'package:PiliPalaX/common/widgets/stat/danmu.dart';
+import 'package:PiliPalaX/common/widgets/stat/view.dart';
+import 'package:PiliPalaX/http/search.dart';
+import 'package:PiliPalaX/http/video.dart';
+import 'package:PiliPalaX/models/common/search_type.dart';
+import 'package:PiliPalaX/utils/id_utils.dart';
+import 'package:PiliPalaX/utils/utils.dart';
+import 'package:PiliPalaX/common/widgets/network_img_layer.dart';
 import '../../../common/widgets/badge.dart';
 
 // 收藏视频卡片 - 水平布局
 class FavVideoCardH extends StatelessWidget {
   final dynamic videoItem;
   final Function? callFn;
+  final int? searchType;
 
-  const FavVideoCardH({Key? key, required this.videoItem, this.callFn})
-      : super(key: key);
+  const FavVideoCardH({
+    Key? key,
+    required this.videoItem,
+    this.callFn,
+    this.searchType,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +112,11 @@ class FavVideoCardH extends StatelessWidget {
                           },
                         ),
                       ),
-                      VideoContent(videoItem: videoItem, callFn: callFn)
+                      VideoContent(
+                        videoItem: videoItem,
+                        callFn: callFn,
+                        searchType: searchType,
+                      )
                     ],
                   ),
                 );
@@ -123,7 +132,13 @@ class FavVideoCardH extends StatelessWidget {
 class VideoContent extends StatelessWidget {
   final dynamic videoItem;
   final Function? callFn;
-  const VideoContent({super.key, required this.videoItem, this.callFn});
+  final int? searchType;
+  const VideoContent({
+    super.key,
+    required this.videoItem,
+    this.callFn,
+    this.searchType,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -189,48 +204,51 @@ class VideoContent extends StatelessWidget {
                 ),
               ],
             ),
-            Positioned(
-              right: 0,
-              bottom: -4,
-              child: IconButton(
-                style: ButtonStyle(
-                  padding: MaterialStateProperty.all(EdgeInsets.zero),
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: Get.context!,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('提示'),
-                        content: const Text('要取消收藏吗?'),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Get.back(),
-                              child: Text(
-                                '取消',
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.outline),
-                              )),
-                          TextButton(
-                            onPressed: () async {
-                              await callFn!();
-                              Get.back();
-                            },
-                            child: const Text('确定取消'),
-                          )
-                        ],
-                      );
-                    },
-                  );
-                },
-                icon: Icon(
-                  Icons.clear_outlined,
-                  color: Theme.of(context).colorScheme.outline,
-                  size: 18,
-                ),
-              ),
-            ),
+            searchType != 1
+                ? Positioned(
+                    right: 0,
+                    bottom: -4,
+                    child: IconButton(
+                      style: ButtonStyle(
+                        padding: MaterialStateProperty.all(EdgeInsets.zero),
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: Get.context!,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('提示'),
+                              content: const Text('要取消收藏吗?'),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Get.back(),
+                                    child: Text(
+                                      '取消',
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outline),
+                                    )),
+                                TextButton(
+                                  onPressed: () async {
+                                    await callFn!();
+                                    Get.back();
+                                  },
+                                  child: const Text('确定取消'),
+                                )
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: Icon(
+                        Icons.clear_outlined,
+                        color: Theme.of(context).colorScheme.outline,
+                        size: 18,
+                      ),
+                    ),
+                  )
+                : const SizedBox(),
           ],
         ),
       ),

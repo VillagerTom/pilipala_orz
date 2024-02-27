@@ -1,16 +1,16 @@
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/fan.dart';
-import 'package:pilipala/models/fans/result.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/fan.dart';
+import 'package:PiliPalaX/models/fans/result.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 class FansController extends GetxController {
   Box userInfoCache = GStrorage.userInfo;
   int pn = 1;
   int ps = 20;
   int total = 0;
-  RxList<FansItemModel> fansList = [FansItemModel()].obs;
+  RxList<FansItemModel> fansList = <FansItemModel>[].obs;
   late int mid;
   late String name;
   var userInfo;

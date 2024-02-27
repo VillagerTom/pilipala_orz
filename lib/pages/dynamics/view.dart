@@ -7,13 +7,13 @@ import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
-import 'package:pilipala/common/skeleton/dynamic_card.dart';
-import 'package:pilipala/common/widgets/http_error.dart';
-import 'package:pilipala/common/widgets/no_data.dart';
-import 'package:pilipala/models/dynamics/result.dart';
-import 'package:pilipala/pages/main/index.dart';
-import 'package:pilipala/utils/feed_back.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/common/skeleton/dynamic_card.dart';
+import 'package:PiliPalaX/common/widgets/http_error.dart';
+import 'package:PiliPalaX/common/widgets/no_data.dart';
+import 'package:PiliPalaX/models/dynamics/result.dart';
+import 'package:PiliPalaX/pages/main/index.dart';
+import 'package:PiliPalaX/utils/feed_back.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 import '../../common/constants.dart';
 import '../../utils/grid.dart';
@@ -195,22 +195,6 @@ class _DynamicsPageState extends State<DynamicsPage>
                   )
                 ],
               ),
-              // Obx(
-              //   () => Visibility(
-              //     visible: _dynamicsController.userLogin.value,
-              //     child: Positioned(
-              //       right: 4,
-              //       top: 0,
-              //       bottom: 0,
-              //       child: IconButton(
-              //         padding: EdgeInsets.zero,
-              //         onPressed: () =>
-              //             {feedBack(), _dynamicsController.resetSearch()},
-              //         icon: const Icon(Icons.history, size: 21),
-              //       ),
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ),
@@ -232,7 +216,8 @@ class _DynamicsPageState extends State<DynamicsPage>
                     return Obx(() => UpPanel(_dynamicsController.upData.value));
                   } else {
                     return const SliverToBoxAdapter(
-                        child: SizedBox(height: 80));
+                      child: SizedBox(height: 80),
+                    );
                   }
                 } else {
                   return const SliverToBoxAdapter(
@@ -242,15 +227,6 @@ class _DynamicsPageState extends State<DynamicsPage>
                   ));
                 }
               },
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                height: 6,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onInverseSurface
-                    .withOpacity(0.5),
-              ),
             ),
             FutureBuilder(
               future: _futureBuilderFuture,

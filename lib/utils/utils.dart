@@ -17,6 +17,8 @@ import '../http/index.dart';
 import '../models/github/latest.dart';
 
 class Utils {
+  static final Random random = Random();
+
   static Future<String> getCookiePath() async {
     final Directory tempDir = await getApplicationSupportDirectory();
     final String tempPath = "${tempDir.path}/.plpl/";
@@ -97,10 +99,20 @@ class Utils {
       currentYearStr = 'MM-DD hh:mm';
       lastYearStr = 'YY-MM-DD hh:mm';
       return CustomStamp_str(
+          timestamp: timeStamp, date: lastYearStr, toInt: false);
+    } else if (formatType == 'day') {
+      if (distance <= 43200) {
+        return CustomStamp_str(
           timestamp: timeStamp,
-          date: lastYearStr,
-          toInt: false,
-          formatType: formatType);
+          date: 'hh:mm',
+          toInt: true,
+        );
+      }
+      return CustomStamp_str(
+        timestamp: timeStamp,
+        date: 'YY-MM-DD',
+        toInt: true,
+      );
     }
     if (distance <= 60) {
       return '刚刚';
@@ -111,25 +123,19 @@ class Utils {
     } else if (DateTime.fromMillisecondsSinceEpoch(time * 1000).year ==
         DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000).year) {
       return CustomStamp_str(
-          timestamp: timeStamp,
-          date: currentYearStr,
-          toInt: false,
-          formatType: formatType);
+          timestamp: timeStamp, date: currentYearStr, toInt: false);
     } else {
       return CustomStamp_str(
-          timestamp: timeStamp,
-          date: lastYearStr,
-          toInt: false,
-          formatType: formatType);
+          timestamp: timeStamp, date: lastYearStr, toInt: false);
     }
   }
 
   // 时间戳转时间
-  static String CustomStamp_str(
-      {int? timestamp, // 为空则显示当前时间
-      String? date, // 显示格式，比如：'YY年MM月DD日 hh:mm:ss'
-      bool toInt = true, // 去除0开头
-      String? formatType}) {
+  static String CustomStamp_str({
+    int? timestamp, // 为空则显示当前时间
+    String? date, // 显示格式，比如：'YY年MM月DD日 hh:mm:ss'
+    bool toInt = true, // 去除0开头
+  }) {
     timestamp ??= (DateTime.now().millisecondsSinceEpoch / 1000).round();
     String timeStr =
         (DateTime.fromMillisecondsSinceEpoch(timestamp * 1000)).toString();
@@ -159,10 +165,6 @@ class Utils {
       return timeStr;
     }
 
-    // if (formatType == 'list' && int.parse(DD) > DateTime.now().day - 2) {
-    //   return '昨天';
-    // }
-
     date = date
         .replaceAll('YY', YY)
         .replaceAll('MM', MM)
@@ -170,18 +172,18 @@ class Utils {
         .replaceAll('hh', hh)
         .replaceAll('mm', mm)
         .replaceAll('ss', ss);
-    if (int.parse(YY) == DateTime.now().year &&
-        int.parse(MM) == DateTime.now().month) {
-      // 当天
-      if (int.parse(DD) == DateTime.now().day) {
-        return '今天';
-      }
-    }
+    // if (int.parse(YY) == DateTime.now().year &&
+    //     int.parse(MM) == DateTime.now().month) {
+    //   // 当天
+    //   if (int.parse(DD) == DateTime.now().day) {
+    //     return '今天';
+    //   }
+    // }
     return date;
   }
 
   static String makeHeroTag(v) {
-    return v.toString() + Random().nextInt(9999).toString();
+    return v.toString() + random.nextInt(9999).toString();
   }
 
   static int duration(String duration) {
@@ -200,43 +202,45 @@ class Utils {
 
   static int findClosestNumber(int target, List<int> numbers) {
     int minDiff = 127;
-    late int closestNumber;
+    int? closestNumber;
     try {
       for (int number in numbers) {
-        int diff = (number - target).abs();
-
+        int diff = target - number;
+        if (diff < 0) {
+          continue;
+        }
         if (diff < minDiff) {
           minDiff = diff;
           closestNumber = number;
         }
       }
-    } catch (_) {}
+    } catch (_) {} finally {
+      closestNumber ??= numbers.last;
+    }
     return closestNumber;
   }
 
   // 版本对比
   static bool needUpdate(localVersion, remoteVersion) {
-    List<String> localVersionList = localVersion.split('.');
-    List<String> remoteVersionList = remoteVersion.split('v')[1].split('.');
-    for (int i = 0; i < localVersionList.length; i++) {
-      int localVersion = int.parse(localVersionList[i]);
-      int remoteVersion = int.parse(remoteVersionList[i]);
-      if (remoteVersion > localVersion) {
-        return true;
-      } else if (remoteVersion < localVersion) {
-        return false;
-      }
-    }
-    return false;
+    return localVersion != remoteVersion;
   }
 
   // 检查更新
-  static Future<bool> checkUpdata() async {
+  static Future<bool> checkUpdate() async {
     SmartDialog.dismiss();
     var currentInfo = await PackageInfo.fromPlatform();
     var result = await Request().get(Api.latestApp, extra: {'ua': 'mob'});
-    LatestDataModel data = LatestDataModel.fromJson(result.data);
-    bool isUpdate = Utils.needUpdate(currentInfo.version, data.tagName!);
+    if (result.data.isEmpty) {
+      SmartDialog.showToast('检查更新失败，github接口未返回数据，请检查网络');
+      return false;
+    }
+    LatestDataModel data = LatestDataModel.fromJson(result.data[0]);
+    String buildNumber = currentInfo.buildNumber;
+    if (Platform.isAndroid) {
+      buildNumber = buildNumber.substring(0, buildNumber.length - 1);
+    }
+    bool isUpdate =
+        Utils.needUpdate("${currentInfo.version}+$buildNumber", data.tagName!);
     if (isUpdate) {
       SmartDialog.show(
         animationType: SmartAnimationType.centerFade_otherSlide,
@@ -269,16 +273,6 @@ class Utils {
                   style:
                       TextStyle(color: Theme.of(context).colorScheme.outline),
                 ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await SmartDialog.dismiss();
-                  launchUrl(
-                    Uri.parse('https://www.123pan.com/s/9sVqVv-flu0A.html'),
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                child: const Text('网盘'),
               ),
               TextButton(
                 onPressed: () => matchVersion(data),
@@ -352,16 +346,14 @@ class Utils {
     return md5String;
   }
 
-  static String generateRandomString(int minLength, int maxLength) {
-    const String printable = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#\$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ';
-
-    var random = Random();
-    int length = minLength + random.nextInt(maxLength - minLength + 1);
-    return List<String>.generate(length, (index) => printable[random.nextInt(printable.length)]).join();
+  static List<int> generateRandomBytes(int minLength, int maxLength) {
+    return List<int>.generate(
+      random.nextInt(maxLength-minLength+1), (_) => random.nextInt(0x60) + 0x20
+    );
   }
 
   static String base64EncodeRandomString(int minLength, int maxLength) {
-    String randomString = generateRandomString(minLength, maxLength);
-    return base64.encode(utf8.encode(randomString));
+    List<int> randomBytes = generateRandomBytes(minLength, maxLength);
+    return base64.encode(randomBytes);
   }
 }

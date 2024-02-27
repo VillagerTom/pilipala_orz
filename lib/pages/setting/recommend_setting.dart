@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/member.dart';
-import 'package:pilipala/models/common/rcmd_type.dart';
-import 'package:pilipala/pages/setting/widgets/select_dialog.dart';
-import 'package:pilipala/utils/recommend_filter.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/member.dart';
+import 'package:PiliPalaX/models/common/rcmd_type.dart';
+import 'package:PiliPalaX/pages/setting/widgets/select_dialog.dart';
+import 'package:PiliPalaX/utils/recommend_filter.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 import 'widgets/switch_item.dart';
 
@@ -242,7 +242,7 @@ class _RecommendSettingState extends State<RecommendSetting> {
             dense: true,
             subtitle: Text(
               '¹ 若默认web端推荐不太符合预期，可尝试切换至app端。\n'
-              '¹ 选择“模拟未登录(notLogin)”，将以空的key请求推荐接口，但播放页仍会携带用户信息，保证账号能正常记录进度、点赞投币等。\n\n'
+              '¹ 选择“游客模式(notLogin)”，将以空的key请求app推荐接口，但播放页仍会携带用户信息，保证账号能正常记录进度、点赞投币等。\n\n'
               '² 由于接口未提供关注信息，无法豁免相关视频中的已关注Up。\n\n'
               '* 其它（如热门视频、手动搜索、链接跳转等）均不受过滤器影响。\n'
               '* 设定较严苛的条件可导致推荐项数锐减或多次请求，请酌情选择。\n'

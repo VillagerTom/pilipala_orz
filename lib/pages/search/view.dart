@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/widgets/http_error.dart';
+import 'package:PiliPalaX/common/widgets/http_error.dart';
 import 'controller.dart';
 import 'widgets/hot_keyword.dart';
 import 'widgets/search_text.dart';
@@ -187,9 +187,13 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                         ),
                       );
                     } else {
-                      return HttpError(
-                        errMsg: data['msg'],
-                        fn: () => setState(() {}),
+                      return CustomScrollView(
+                        slivers: [
+                          HttpError(
+                            errMsg: data['msg'],
+                            fn: () => setState(() {}),
+                          )
+                        ],
                       );
                     }
                   } else {

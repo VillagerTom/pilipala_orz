@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/init.dart';
-import 'package:pilipala/models/common/theme_type.dart';
-import 'package:pilipala/utils/feed_back.dart';
-import 'package:pilipala/utils/login.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/init.dart';
+import 'package:PiliPalaX/models/common/theme_type.dart';
+import 'package:PiliPalaX/utils/feed_back.dart';
+import 'package:PiliPalaX/utils/login.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 import '../../models/common/dynamic_badge_mode.dart';
 import '../main/index.dart';
 import 'widgets/select_dialog.dart';
@@ -17,6 +17,7 @@ class SettingController extends GetxController {
   Box localCache = GStrorage.localCache;
 
   RxBool userLogin = false.obs;
+  RxBool hiddenSettingUnlocked = false.obs;
   RxBool feedBackEnable = false.obs;
   RxDouble toastOpacity = (1.0).obs;
   RxInt picQuality = 10.obs;
@@ -29,6 +30,7 @@ class SettingController extends GetxController {
     super.onInit();
     userInfo = userInfoCache.get('userInfoCache');
     userLogin.value = userInfo != null;
+    hiddenSettingUnlocked.value = setting.get(SettingBoxKey.hiddenSettingUnlocked, defaultValue: false);
     feedBackEnable.value =
         setting.get(SettingBoxKey.feedBackEnable, defaultValue: false);
     toastOpacity.value =

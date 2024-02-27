@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/user.dart';
-import 'package:pilipala/models/user/fav_folder.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/user.dart';
+import 'package:PiliPalaX/models/user/fav_folder.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 class MediaController extends GetxController {
   Rx<FavFolderData> favFolderData = FavFolderData().obs;
@@ -29,9 +29,23 @@ class MediaController extends GetxController {
       'onTap': () => Get.toNamed('/fav'),
     },
     {
+      'icon': Icons.subscriptions_outlined,
+      'title': '我的订阅',
+      'onTap': () => Get.toNamed('/subscription'),
+    },
+    {
       'icon': Icons.watch_later_outlined,
       'title': '稍后再看',
       'onTap': () => Get.toNamed('/later'),
+    },
+    {
+      'icon': Icons.create_outlined,
+      'title': '创作中心(web)',
+      'onTap': () => Get.toNamed('/webview', parameters: {
+        'url': 'https://member.bilibili.com/platform/home',
+        'type': 'url',
+        'pageTitle': "创作中心（建议浏览器打开）",
+      }),
     },
   ];
   var userInfo;

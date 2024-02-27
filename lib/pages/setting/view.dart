@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/pages/setting/index.dart';
+import 'package:PiliPalaX/pages/setting/index.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -43,6 +43,16 @@ class SettingPage extends StatelessWidget {
             onTap: () => Get.toNamed('/extraSetting'),
             dense: false,
             title: const Text('其他设置'),
+          ),
+          Obx(
+            () => Visibility(
+              visible: settingController.hiddenSettingUnlocked.value,
+              child: ListTile(
+                onTap: () => Get.toNamed('/hiddenSetting'),
+                dense: false,
+                title: const Text('开发人员选项'),
+              ),
+            ),
           ),
           Obx(
             () => Visibility(

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/html.dart';
-import 'package:pilipala/http/reply.dart';
-import 'package:pilipala/models/common/reply_sort_type.dart';
-import 'package:pilipala/models/video/reply/item.dart';
-import 'package:pilipala/utils/feed_back.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/html.dart';
+import 'package:PiliPalaX/http/reply.dart';
+import 'package:PiliPalaX/models/common/reply_sort_type.dart';
+import 'package:PiliPalaX/models/video/reply/item.dart';
+import 'package:PiliPalaX/utils/feed_back.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 class DynamicDetailController extends GetxController {
   DynamicDetailController(this.oid, this.type);
@@ -17,7 +17,7 @@ class DynamicDetailController extends GetxController {
   int currentPage = 0;
   bool isLoadingMore = false;
   RxString noMore = ''.obs;
-  RxList<ReplyItemModel> replyList = [ReplyItemModel()].obs;
+  RxList<ReplyItemModel> replyList = <ReplyItemModel>[].obs;
   RxInt acount = 0.obs;
   final ScrollController scrollController = ScrollController();
 
@@ -35,13 +35,13 @@ class DynamicDetailController extends GetxController {
       acount.value =
           int.parse(item!.modules!.moduleStat!.comment!.count ?? '0');
     }
-    int deaultReplySortIndex =
+    int defaultReplySortIndex =
         setting.get(SettingBoxKey.replySortType, defaultValue: 0);
-    if (deaultReplySortIndex == 2) {
+    if (defaultReplySortIndex == 2) {
       setting.put(SettingBoxKey.replySortType, 0);
-      deaultReplySortIndex = 0;
+      defaultReplySortIndex = 0;
     }
-    _sortType = ReplySortType.values[deaultReplySortIndex];
+    _sortType = ReplySortType.values[defaultReplySortIndex];
     sortTypeTitle.value = _sortType.titles;
     sortTypeLabel.value = _sortType.labels;
   }
@@ -50,12 +50,14 @@ class DynamicDetailController extends GetxController {
     if (reqType == 'init') {
       currentPage = 0;
     }
+    isLoadingMore = true;
     var res = await ReplyHttp.replyList(
       oid: oid!,
       pageNum: currentPage + 1,
       type: type!,
       sort: _sortType.index,
     );
+    isLoadingMore = false;
     if (res['status']) {
       List<ReplyItemModel> replies = res['data'].replies;
       acount.value = res['data'].page.acount;
@@ -84,7 +86,6 @@ class DynamicDetailController extends GetxController {
         replyList.addAll(replies);
       }
     }
-    isLoadingMore = false;
     return res;
   }
 

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/search.dart';
-import 'package:pilipala/models/search/hot.dart';
-import 'package:pilipala/models/search/suggest.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/search.dart';
+import 'package:PiliPalaX/models/search/hot.dart';
+import 'package:PiliPalaX/models/search/suggest.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 class SSearchController extends GetxController {
   final FocusNode searchFocusNode = FocusNode();
@@ -15,7 +15,7 @@ class SSearchController extends GetxController {
   Box histiryWord = GStrorage.historyword;
   List historyCacheList = [];
   RxList historyList = [].obs;
-  RxList<SearchSuggestItem> searchSuggestList = [SearchSuggestItem()].obs;
+  RxList<SearchSuggestItem> searchSuggestList = <SearchSuggestItem>[].obs;
   final _debouncer =
       Debouncer(delay: const Duration(milliseconds: 200)); // 设置延迟时间
   String hintText = '搜索';

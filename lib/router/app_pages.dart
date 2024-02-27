@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/pages/msg_feed_top/at_me/view.dart';
-import 'package:pilipala/pages/msg_feed_top/reply_me/view.dart';
-import 'package:pilipala/pages/msg_feed_top/like_me/view.dart';
-import 'package:pilipala/pages/follow_search/view.dart';
-import 'package:pilipala/pages/setting/pages/logs.dart';
+import 'package:PiliPalaX/pages/msg_feed_top/at_me/view.dart';
+import 'package:PiliPalaX/pages/msg_feed_top/reply_me/view.dart';
+import 'package:PiliPalaX/pages/msg_feed_top/like_me/view.dart';
+import 'package:PiliPalaX/pages/follow_search/view.dart';
+import 'package:PiliPalaX/pages/setting/pages/logs.dart';
 
 import '../pages/about/index.dart';
 import '../pages/blacklist/index.dart';
@@ -34,6 +34,7 @@ import '../pages/member_dynamics/index.dart';
 import '../pages/member_like/index.dart';
 import '../pages/member_search/index.dart';
 import '../pages/member_seasons/index.dart';
+import '../pages/msg_feed_top/sys_msg/view.dart';
 import '../pages/search/index.dart';
 import '../pages/search_result/index.dart';
 import '../pages/setting/extra_setting.dart';
@@ -47,6 +48,9 @@ import '../pages/setting/recommend_setting.dart';
 import '../pages/setting/play_setting.dart';
 import '../pages/setting/privacy_setting.dart';
 import '../pages/setting/style_setting.dart';
+import '../pages/setting/hidden_settings.dart';
+import '../pages/subscription/index.dart';
+import '../pages/subscription_detail/index.dart';
 import '../pages/video/detail/index.dart';
 import '../pages/video/detail/reply_reply/index.dart';
 import '../pages/webview/index.dart';
@@ -121,6 +125,8 @@ class Routes {
     //
     CustomGetPage(name: '/blackListPage', page: () => const BlackListPage()),
     CustomGetPage(name: '/colorSetting', page: () => const ColorSelectPage()),
+    // 开发人员选项
+    CustomGetPage(name: '/hiddenSetting', page: () => const HiddenSetting()),
     // 首页tabbar
     CustomGetPage(name: '/tabbarSetting', page: () => const TabbarSetPage()),
     CustomGetPage(
@@ -151,7 +157,7 @@ class Routes {
     // 收到的赞
     CustomGetPage(name: '/likeMe', page: () => const LikeMePage()),
     // 系统消息
-    CustomGetPage(name: '/sysMsg', page: () => const WhisperPage()),
+    CustomGetPage(name: '/sysMsg', page: () => const SysMsgPage()),
     // 登录页面
     CustomGetPage(name: '/loginPage', page: () => const LoginPage()),
     // 用户动态
@@ -171,6 +177,10 @@ class Routes {
     CustomGetPage(name: '/logs', page: () => const LogsPage()),
     // 搜索关注
     CustomGetPage(name: '/followSearch', page: () => const FollowSearchPage()),
+    // 订阅
+    CustomGetPage(name: '/subscription', page: () => const SubPage()),
+    // 订阅详情
+    CustomGetPage(name: '/subDetail', page: () => const SubDetailPage()),
   ];
 }
 

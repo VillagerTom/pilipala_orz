@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/models/common/theme_type.dart';
-import 'package:pilipala/pages/setting/pages/color_select.dart';
-import 'package:pilipala/pages/setting/widgets/select_dialog.dart';
-import 'package:pilipala/pages/setting/widgets/slide_dialog.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/models/common/theme_type.dart';
+import 'package:PiliPalaX/pages/setting/pages/color_select.dart';
+import 'package:PiliPalaX/pages/setting/widgets/select_dialog.dart';
+import 'package:PiliPalaX/pages/setting/widgets/slide_dialog.dart';
+import 'package:PiliPalaX/utils/global_data.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 import '../../models/common/dynamic_badge_mode.dart';
 import 'controller.dart';
@@ -102,6 +103,12 @@ class _StyleSettingState extends State<StyleSetting> {
             defaultVal: true,
             needReboot: true,
           ),
+          const SetSwitchItem(
+            title: '首页底栏背景渐变',
+            setKey: SettingBoxKey.enableGradientBg,
+            defaultVal: true,
+            needReboot: true,
+          ),
           ListTile(
             onTap: () async {
               double? result = await showDialog(
@@ -173,6 +180,8 @@ class _StyleSettingState extends State<StyleSetting> {
                                   SettingBoxKey.defaultPicQa, picQuality);
                               Get.back();
                               settingController.picQuality.value = picQuality;
+                              GlobalData().imgQuality = picQuality;
+                              SmartDialog.showToast('设置成功');
                             },
                             child: const Text('确定'),
                           )

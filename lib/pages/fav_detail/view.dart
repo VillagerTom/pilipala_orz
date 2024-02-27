@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/skeleton/video_card_h.dart';
-import 'package:pilipala/common/widgets/http_error.dart';
-import 'package:pilipala/common/widgets/network_img_layer.dart';
-import 'package:pilipala/common/widgets/no_data.dart';
-import 'package:pilipala/pages/fav_detail/index.dart';
+import 'package:PiliPalaX/common/skeleton/video_card_h.dart';
+import 'package:PiliPalaX/common/widgets/http_error.dart';
+import 'package:PiliPalaX/common/widgets/network_img_layer.dart';
+import 'package:PiliPalaX/common/widgets/no_data.dart';
+import 'package:PiliPalaX/pages/fav_detail/index.dart';
 
 import 'widget/fav_video_card.dart';
 
@@ -24,10 +24,12 @@ class _FavDetailPageState extends State<FavDetailPage> {
       Get.put(FavDetailController());
   late StreamController<bool> titleStreamC; // a
   Future? _futureBuilderFuture;
+  late String mediaId;
 
   @override
   void initState() {
     super.initState();
+    mediaId = Get.parameters['mediaId']!;
     _futureBuilderFuture = _favDetailController.queryUserFavFolderDetail();
     titleStreamC = StreamController<bool>();
     _controller.addListener(
@@ -94,8 +96,8 @@ class _FavDetailPageState extends State<FavDetailPage> {
             ),
             actions: [
               IconButton(
-                onPressed: () => Get.toNamed(
-                    '/favSearch?searchType=0&mediaId=${Get.parameters['mediaId']!}'),
+                onPressed: () =>
+                    Get.toNamed('/favSearch?searchType=0&mediaId=$mediaId'),
                 icon: const Icon(Icons.search_outlined),
               ),
               //   IconButton(

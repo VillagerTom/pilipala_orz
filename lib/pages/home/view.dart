@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/widgets/network_img_layer.dart';
-import 'package:pilipala/pages/mine/index.dart';
-import 'package:pilipala/utils/feed_back.dart';
+import 'package:PiliPalaX/common/widgets/network_img_layer.dart';
+import 'package:PiliPalaX/pages/mine/index.dart';
+import 'package:PiliPalaX/utils/feed_back.dart';
 import './controller.dart';
 
 class HomePage extends StatefulWidget {
@@ -48,38 +48,48 @@ class _HomePageState extends State<HomePage>
     super.build(context);
     Brightness currentBrightness = MediaQuery.of(context).platformBrightness;
     // 设置状态栏图标的亮度
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarIconBrightness: currentBrightness == Brightness.light
-          ? Brightness.dark
-          : Brightness.light,
-    ));
+    if (_homeController.enableGradientBg) {
+      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarIconBrightness: currentBrightness == Brightness.light
+            ? Brightness.dark
+            : Brightness.light,
+      ));
+    }
     return Scaffold(
       extendBody: true,
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
           // gradient background
-          Align(
-            alignment: Alignment.topLeft,
-            child: Opacity(
-              opacity: 0.6,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary.withOpacity(0.9),
-                        Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                        Theme.of(context).colorScheme.surface
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      stops: const [0, 0.0034, 0.34]),
+          if (_homeController.enableGradientBg) ...[
+            Align(
+              alignment: Alignment.topLeft,
+              child: Opacity(
+                opacity: 0.6,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.9),
+                          Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.5),
+                          Theme.of(context).colorScheme.surface
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        stops: const [0, 0.0034, 0.34]),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
           Column(
             children: [
               CustomAppBar(
@@ -90,7 +100,37 @@ class _HomePageState extends State<HomePage>
                 callback: showUserBottomSheet,
               ),
               if (_homeController.tabs.length > 1) ...[
-                const CustomTabs(),
+                if (_homeController.enableGradientBg) ...[
+                  const CustomTabs(),
+                ] else ...[
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 42,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: TabBar(
+                        controller: _homeController.tabController,
+                        tabs: [
+                          for (var i in _homeController.tabs)
+                            Tab(text: i['label'])
+                        ],
+                        isScrollable: true,
+                        dividerColor: Colors.transparent,
+                        enableFeedback: true,
+                        splashBorderRadius: BorderRadius.circular(10),
+                        tabAlignment: TabAlignment.center,
+                        onTap: (value) {
+                          feedBack();
+                          if (_homeController.initialIndex.value == value) {
+                            _homeController.tabsCtrList[value]().animateToTop();
+                          }
+                          _homeController.initialIndex.value = value;
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ] else ...[
                 const SizedBox(height: 6),
               ],
@@ -371,12 +411,14 @@ class SearchBar extends StatelessWidget {
                   color: colorScheme.onSecondaryContainer,
                 ),
                 const SizedBox(width: 10),
-                Obx(
-                  () => Text(
-                    ctr!.defaultSearch.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: colorScheme.outline),
+                Expanded(
+                  child: Obx(
+                    () => Text(
+                      ctr!.defaultSearch.value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: colorScheme.outline),
+                    ),
                   ),
                 ),
               ],

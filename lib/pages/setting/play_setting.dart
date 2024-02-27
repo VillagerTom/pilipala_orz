@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/models/video/play/quality.dart';
-import 'package:pilipala/pages/setting/widgets/select_dialog.dart';
-import 'package:pilipala/plugin/pl_player/index.dart';
-import 'package:pilipala/services/service_locator.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/models/video/play/quality.dart';
+import 'package:PiliPalaX/pages/setting/widgets/select_dialog.dart';
+import 'package:PiliPalaX/plugin/pl_player/index.dart';
+import 'package:PiliPalaX/services/service_locator.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 import 'widgets/switch_item.dart';
 
@@ -156,6 +156,12 @@ class _PlaySettingState extends State<PlaySetting> {
             subTitle: '左侧双击快退，右侧双击快进',
             setKey: SettingBoxKey.enableQuickDouble,
             defaultVal: true,
+          ),
+          const SetSwitchItem(
+            title: '全屏手势反向',
+            subTitle: '默认播放器中部向上滑动进入全屏，向下退出\n开启后向下全屏，向上退出',
+            setKey: SettingBoxKey.fullScreenGestureReverse,
+            defaultVal: false,
           ),
           const SetSwitchItem(
             title: '弹幕开关',

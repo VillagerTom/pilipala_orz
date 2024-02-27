@@ -2,7 +2,7 @@ import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/widgets/network_img_layer.dart';
+import 'package:PiliPalaX/common/widgets/network_img_layer.dart';
 
 import 'controller.dart';
 
@@ -78,7 +78,8 @@ class _ReplyMePageState extends State<ReplyMePage> {
                       title: Text(
                         "${_replyMeController.msgFeedReplyMeList[i].user?.nickname}  "
                         "回复了我的${_replyMeController.msgFeedReplyMeList[i].item?.business}",
-                        style: Theme.of(context).textTheme.bodyMedium!,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.primary),
                       ),
                       subtitle: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -126,7 +127,7 @@ class _ReplyMePageState extends State<ReplyMePage> {
                                           color: Theme.of(context)
                                               .colorScheme
                                               .outline,
-                                      height: 1.5)),
+                                          height: 1.5)),
                           ]),
                     );
                   },

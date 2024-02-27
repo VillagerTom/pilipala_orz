@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/live.dart';
-import 'package:pilipala/models/live/item.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/live.dart';
+import 'package:PiliPalaX/models/live/item.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 class LiveController extends GetxController {
   final ScrollController scrollController = ScrollController();
   int count = 12;
   int _currentPage = 1;
   RxInt crossAxisCount = 2.obs;
-  RxList<LiveItemModel> liveList = [LiveItemModel()].obs;
-  bool isLoadingMore = false;
+  RxList<LiveItemModel> liveList = <LiveItemModel>[].obs;
   bool flag = false;
   OverlayEntry? popupDialog;
   Box setting = GStrorage.setting;
@@ -37,7 +36,6 @@ class LiveController extends GetxController {
       }
       _currentPage += 1;
     }
-    isLoadingMore = false;
     return res;
   }
 

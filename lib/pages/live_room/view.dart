@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:floating/floating.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/widgets/network_img_layer.dart';
-import 'package:pilipala/plugin/pl_player/index.dart';
+import 'package:PiliPalaX/common/widgets/network_img_layer.dart';
+import 'package:PiliPalaX/plugin/pl_player/index.dart';
 
 import 'controller.dart';
 import 'widgets/bottom_control.dart';
@@ -29,28 +29,22 @@ class _LiveRoomPageState extends State<LiveRoomPage> {
   @override
   void initState() {
     super.initState();
-    plPlayerController = _liveRoomController.plPlayerController;
-    plPlayerController!.onPlayerStatusChanged.listen(
-      (PlayerStatus status) {
-        if (status == PlayerStatus.playing) {
-          isShowCover = false;
-          setState(() {});
-        }
-      },
-    );
     if (Platform.isAndroid) {
       floating = Floating();
     }
-    _futureBuilder = _liveRoomController.queryLiveInfoH5();
+    videoSourceInit();
     _futureBuilderFuture = _liveRoomController.queryLiveInfo();
+  }
+
+  Future<void> videoSourceInit() async {
+    _futureBuilder = _liveRoomController.queryLiveInfoH5();
+    plPlayerController = _liveRoomController.plPlayerController;
   }
 
   @override
   void dispose() {
+    floating?.dispose();
     plPlayerController!.dispose();
-    if (floating != null) {
-      floating!.dispose();
-    }
     super.dispose();
   }
 
@@ -79,39 +73,43 @@ class _LiveRoomPageState extends State<LiveRoomPage> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Obx(
-          //   () => Positioned.fill(
-          //     child: Opacity(
-          //       opacity: 0.8,
-          //       child: _liveRoomController
-          //                       .roomInfoH5.value.roomInfo?.appBackground !=
-          //                   '' &&
-          //               _liveRoomController
-          //                       .roomInfoH5.value.roomInfo?.appBackground !=
-          //                   null
-          //           ? NetworkImgLayer(
-          //               width: Get.width,
-          //               height: Get.height,
-          //               src: _liveRoomController
-          //                       .roomInfoH5.value.roomInfo?.appBackground ??
-          //                   '',
-          //             )
-          //           : Image.asset(
-          //               'assets/images/live/default_bg.webp',
-          //               width: Get.width,
-          //               height: Get.height,
-          //             ),
-          //     ),
-          //   ),
-          // ),
-          Positioned.fill(
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
             child: Opacity(
               opacity: 0.8,
               child: Image.asset(
                 'assets/images/live/default_bg.webp',
-                width: Get.width,
-                height: Get.height,
+                fit: BoxFit.cover,
+                // width: Get.width,
+                // height: Get.height,
               ),
+            ),
+          ),
+          Obx(
+            () => Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _liveRoomController
+                              .roomInfoH5.value.roomInfo?.appBackground !=
+                          '' &&
+                      _liveRoomController
+                              .roomInfoH5.value.roomInfo?.appBackground !=
+                          null
+                  ? Opacity(
+                      opacity: 0.8,
+                      child: NetworkImgLayer(
+                        width: Get.width,
+                        height: Get.height,
+                        type: 'bg',
+                        src: _liveRoomController
+                                .roomInfoH5.value.roomInfo?.appBackground ??
+                            '',
+                      ),
+                    )
+                  : const SizedBox(),
             ),
           ),
           Column(

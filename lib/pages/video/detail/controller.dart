@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/constants.dart';
-import 'package:pilipala/http/video.dart';
-import 'package:pilipala/models/common/reply_type.dart';
-import 'package:pilipala/models/common/search_type.dart';
-import 'package:pilipala/models/video/play/quality.dart';
-import 'package:pilipala/models/video/play/url.dart';
-import 'package:pilipala/models/video/reply/item.dart';
-import 'package:pilipala/pages/video/detail/reply_reply/index.dart';
-import 'package:pilipala/plugin/pl_player/index.dart';
-import 'package:pilipala/utils/storage.dart';
-import 'package:pilipala/utils/utils.dart';
-import 'package:pilipala/utils/video_utils.dart';
+import 'package:PiliPalaX/http/constants.dart';
+import 'package:PiliPalaX/http/video.dart';
+import 'package:PiliPalaX/models/common/reply_type.dart';
+import 'package:PiliPalaX/models/common/search_type.dart';
+import 'package:PiliPalaX/models/video/play/quality.dart';
+import 'package:PiliPalaX/models/video/play/url.dart';
+import 'package:PiliPalaX/models/video/reply/item.dart';
+import 'package:PiliPalaX/pages/video/detail/reply_reply/index.dart';
+import 'package:PiliPalaX/plugin/pl_player/index.dart';
+import 'package:PiliPalaX/utils/storage.dart';
+import 'package:PiliPalaX/utils/utils.dart';
+import 'package:PiliPalaX/utils/video_utils.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
 import '../../../utils/id_utils.dart';
@@ -90,6 +90,8 @@ class VideoDetailController extends GetxController
   late String cacheDecode;
   late int cacheAudioQa;
 
+  PersistentBottomSheetController? replyReplyBottomSheetCtr;
+
   @override
   void onInit() {
     super.onInit();
@@ -140,7 +142,7 @@ class VideoDetailController extends GetxController
   }
 
   showReplyReplyPanel() {
-    PersistentBottomSheetController? ctr =
+    replyReplyBottomSheetCtr =
         scaffoldKey.currentState?.showBottomSheet((BuildContext context) {
       return VideoReplyReplyPanel(
         oid: oid.value,
@@ -153,7 +155,7 @@ class VideoDetailController extends GetxController
         source: 'videoDetail',
       );
     });
-    ctr?.closed.then((value) {
+    replyReplyBottomSheetCtr?.closed.then((value) {
       fRpid = 0;
     });
   }
@@ -229,9 +231,11 @@ class VideoDetailController extends GetxController
       seekTo: seekToTime ?? defaultST,
       duration: duration ?? Duration(milliseconds: data.timeLength ?? 0),
       // 宽>高 水平 否则 垂直
-      direction: (firstVideo.width! - firstVideo.height!) > 0
-          ? 'horizontal'
-          : 'vertical',
+      direction: firstVideo.width != null && firstVideo.height != null
+          ? ((firstVideo.width! - firstVideo.height!) > 0
+              ? 'horizontal'
+              : 'vertical')
+          : null,
       bvid: bvid,
       cid: cid.value,
       enableHeart: enableHeart,
@@ -243,23 +247,24 @@ class VideoDetailController extends GetxController
     plPlayerController.headerControl = headerControl;
   }
 
-  void setTriggerFullScreenCallback(void Function({bool? status}) callback) {
-    plPlayerController.setTriggerFullscreenCallback(callback);
-  }
-
   // 视频链接
   Future queryVideoUrl() async {
     var result = await VideoHttp.videoUrl(cid: cid.value, bvid: bvid);
     if (result['status']) {
       data = result['data'];
-      if (data.dash == null) {
-        // isEffective.value = false;
-        if (data.acceptDesc != null) {
-          SmartDialog.showToast('当前视频acceptDesc为：${data.acceptDesc}，不支持获取视频链接');
-        } else {
-          SmartDialog.showToast('当前视频未能获取视频链接');
+      if (data.acceptDesc!.isNotEmpty && data.acceptDesc!.contains('试看')) {
+        SmartDialog.showToast(
+          '该视频为专属视频，仅提供试看',
+          displayTime: const Duration(seconds: 3),
+        );
+        videoUrl = data.durl!.first.url!;
+        audioUrl = '';
+        defaultST = Duration.zero;
+        firstVideo = VideoItem();
+        if (autoPlay.value) {
+          await playerInit();
+          isShowCover.value = false;
         }
-        result['status'] = false;
         return result;
       }
       final List<VideoItem> allVideosList = data.dash!.video!;
@@ -372,5 +377,12 @@ class VideoDetailController extends GetxController
       }
     }
     return result;
+  }
+
+  // mob端全屏状态关闭二级回复
+  hiddenReplyReplyPanel() {
+    replyReplyBottomSheetCtr != null
+        ? replyReplyBottomSheetCtr!.close()
+        : print('replyReplyBottomSheetCtr is null');
   }
 }

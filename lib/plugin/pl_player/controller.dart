@@ -6,21 +6,21 @@ import 'dart:typed_data';
 
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:ns_danmaku/ns_danmaku.dart';
-import 'package:pilipala/http/video.dart';
-import 'package:pilipala/pages/mine/controller.dart';
-import 'package:pilipala/plugin/pl_player/index.dart';
-import 'package:pilipala/plugin/pl_player/models/play_repeat.dart';
-import 'package:pilipala/services/service_locator.dart';
-import 'package:pilipala/utils/feed_back.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/video.dart';
+import 'package:PiliPalaX/pages/mine/controller.dart';
+import 'package:PiliPalaX/plugin/pl_player/index.dart';
+import 'package:PiliPalaX/plugin/pl_player/models/play_repeat.dart';
+import 'package:PiliPalaX/services/service_locator.dart';
+import 'package:PiliPalaX/utils/feed_back.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 import 'package:screen_brightness/screen_brightness.dart';
-import 'package:status_bar_control/status_bar_control.dart';
 import 'package:universal_platform/universal_platform.dart';
 // import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -31,7 +31,6 @@ Box localCache = GStrorage.localCache;
 class PlPlayerController {
   Player? _videoPlayerController;
   VideoController? _videoController;
-  void Function({bool? status})? triggerFullscreenCallback;
 
   // 添加一个私有静态变量来保存实例
   static PlPlayerController? _instance;
@@ -97,6 +96,7 @@ class PlPlayerController {
   int _heartDuration = 0;
   bool _enableHeart = true;
   bool _isFirstTime = true;
+  final RxList<Map<String,String>> _vttSubtitles = <Map<String,String>>[].obs;
 
   Timer? _timer;
   Timer? _timerForSeek;
@@ -149,7 +149,10 @@ class PlPlayerController {
   Rx<bool> get mute => _mute;
   Stream<bool> get onMuteChanged => _mute.stream;
 
-  /// [videoPlayerController] instace of Player
+  // 视频字幕
+  RxList<dynamic> get vttSubtitles => _vttSubtitles;
+
+  /// [videoPlayerController] instance of Player
   Player? get videoPlayerController => _videoPlayerController;
 
   /// [videoController] instace of Player
@@ -232,11 +235,6 @@ class PlPlayerController {
 
   // 播放顺序相关
   PlayRepeat playRepeat = PlayRepeat.pause;
-
-  void setTriggerFullscreenCallback(
-      void Function({bool? status}) triggerFullscreenCallback) {
-    this.triggerFullscreenCallback = triggerFullscreenCallback;
-  }
 
   void updateSliderPositionSecond() {
     int newSecond = _sliderPosition.value.inSeconds;
@@ -379,6 +377,7 @@ class PlPlayerController {
       // 获取视频时长 00:00
       _duration.value = duration ?? _videoPlayerController!.state.duration;
       updateDurationSecond();
+      refreshSubtitles();
       // 数据加载完成
       dataStatus.status.value = DataStatus.loaded;
 
@@ -391,7 +390,7 @@ class PlPlayerController {
           setting.get(SettingBoxKey.enableAutoEnter, defaultValue: false);
       if (autoEnterFullcreen && _isFirstTime) {
         await Future.delayed(const Duration(milliseconds: 100));
-        triggerFullScreen();
+        triggerFullScreen(status: true);
       }
     } catch (err) {
       dataStatus.status.value = DataStatus.error;
@@ -645,7 +644,7 @@ class PlPlayerController {
           Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
         //_timerForSeek = null;
         if (duration.value.inSeconds != 0) {
-          await _videoPlayerController!.stream.buffer.first;
+          await _videoPlayerController?.stream.buffer.first;
           await _videoPlayerController?.seek(position);
           // if (playerStatus.status.value == PlayerStatus.paused) {
           //   play();
@@ -948,15 +947,14 @@ class PlPlayerController {
 
   // 全屏
   Future<void> triggerFullScreen({bool status = true}) async {
-    FullScreenMode mode = FullScreenModeCode.fromCode(
-        setting.get(SettingBoxKey.fullScreenMode, defaultValue: 0))!;
-    await StatusBarControl.setHidden(true, animation: StatusBarAnimation.FADE);
     if (!isFullScreen.value && status) {
+      // StatusBarControl.setHidden(true, animation: StatusBarAnimation.FADE);
+      hideStatusBar();
       /// 按照视频宽高比决定全屏方向
       toggleFullScreen(true);
-
       /// 进入全屏
-      await enterFullScreen();
+      FullScreenMode mode = FullScreenModeCode.fromCode(
+          setting.get(SettingBoxKey.fullScreenMode, defaultValue: 0))!;
       if (mode == FullScreenMode.vertical ||
           (mode == FullScreenMode.auto && direction.value == 'vertical') ||
           (mode == FullScreenMode.ratio &&
@@ -966,49 +964,13 @@ class PlPlayerController {
       } else {
         await landScape();
       }
-
-      // bool isValid =
-      //     direction.value == 'vertical' || mode == FullScreenMode.vertical
-      //         ? true
-      //         : false;
-      // var result = await showDialog(
-      //   context: Get.context!,
-      //   useSafeArea: false,
-      //   builder: (context) => Dialog.fullscreen(
-      //     backgroundColor: Colors.black,
-      //     child: SafeArea(
-      //       // 忽略手机安全区域
-      //       top: isValid,
-      //       left: false,
-      //       right: false,
-      //       bottom: isValid,
-      //       child: PLVideoPlayer(
-      //         controller: this,
-      //         headerControl: headerControl,
-      //         bottomControl: bottomControl,
-      //         danmuWidget: danmuWidget,
-      //       ),
-      //     ),
-      //   ),
-      // );
-      // if (result == null) {
-      //   // 退出全屏
-      //   StatusBarControl.setHidden(false, animation: StatusBarAnimation.FADE);
-      //   exitFullScreen();
-      //   await verticalScreen();
-      //   toggleFullScreen(false);
-      // }
-    } else if (isFullScreen.value) {
-      StatusBarControl.setHidden(false, animation: StatusBarAnimation.FADE);
-      // Get.back();
-      exitFullScreen();
-      if (!setting.get(SettingBoxKey.horizontalScreen, defaultValue: false)) {
+    } else if (isFullScreen.value && !status) {
+      // StatusBarControl.setHidden(false, animation: StatusBarAnimation.FADE);
+      showStatusBar();
+      toggleFullScreen(false);
+      if (!setting.get(SettingBoxKey.horizontalScreen, defaultValue: false)){
         await verticalScreen();
       }
-      toggleFullScreen(false);
-    }
-    if (triggerFullscreenCallback != null) {
-      triggerFullscreenCallback!(status: status);
     }
   }
 
@@ -1120,5 +1082,83 @@ class PlPlayerController {
     } catch (err) {
       print(err);
     }
+  }
+
+  void refreshSubtitles() async {
+    _vttSubtitles.clear();
+    Map res = await VideoHttp.subtitlesJson(
+        bvid: _bvid, cid: _cid);
+    if (!res["status"]) {
+      SmartDialog.showToast('查询字幕错误，${res["msg"]}');
+    }
+    if (res["data"].length == 0) {
+      return;
+    }
+    _vttSubtitles.value = await VideoHttp.vttSubtitles(res["data"]);
+    if (_vttSubtitles.isEmpty) {
+      // SmartDialog.showToast('字幕均加载失败');
+      return;
+    }
+  }
+
+  /// 选择字幕
+  void showSetSubtitleSheet() async {
+    showDialog(
+      context: Get.context!,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('选择字幕（测试）'),
+          content: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 2,
+                  children: [
+                    FilledButton.tonal(
+                      onPressed: () async {
+                        await removeSubtitle();
+                        Get.back();
+                      },
+                      child: const Text("关闭字幕"),
+                    ),
+                    for (final Map<String, String> i in _vttSubtitles) ...<Widget>[
+                      FilledButton.tonal(
+                        onPressed: () async {
+                          await setSubtitle(i);
+                          Get.back();
+                        },
+                        child: Text(i["title"]!),
+                      ),
+                    ]
+                  ],
+                );
+              }),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text(
+                '取消',
+                style: TextStyle(color: Theme.of(context).colorScheme.outline),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  removeSubtitle() {
+    _videoPlayerController?.setSubtitleTrack(SubtitleTrack.no());
+  }
+
+  // 设定字幕轨道
+  setSubtitle(Map<String,String> s) {
+    _videoPlayerController?.setSubtitleTrack(
+      SubtitleTrack.data(
+        s['text']!,
+        title: s['title']!,
+        language: s['language']!,
+      )
+    );
   }
 }

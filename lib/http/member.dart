@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:hive/hive.dart';
 import '../common/constants.dart';
@@ -97,6 +94,7 @@ class MemberHttp {
       'dm_img_list': '[]',
       'dm_img_str': dmImgStr.substring(0, dmImgStr.length - 2),
       'dm_cover_img_str': dmCoverImgStr.substring(0, dmCoverImgStr.length - 2),
+      'dm_img_inter': '{"ds":[],"wh":[0,0,0],"of":[0,0,0]}',
     });
     var res = await Request().get(
       Api.memberArchive,
@@ -109,10 +107,13 @@ class MemberHttp {
         'data': MemberArchiveDataModel.fromJson(res.data['data'])
       };
     } else {
+      Map errMap = {
+        -352: '风控校验失败，请检查登录状态',
+      };
       return {
         'status': false,
         'data': [],
-        'msg': res.data['message'],
+        'msg': errMap[res.data['code']] ?? res.data['message'],
       };
     }
   }
@@ -131,10 +132,13 @@ class MemberHttp {
         'data': DynamicsDataModel.fromJson(res.data['data']),
       };
     } else {
+      Map errMap = {
+        -352: '风控校验失败，请检查登录状态',
+      };
       return {
         'status': false,
         'data': [],
-        'msg': res.data['message'],
+        'msg': errMap[res.data['code']] ?? res.data['message'],
       };
     }
   }

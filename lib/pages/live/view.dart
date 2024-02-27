@@ -4,14 +4,13 @@ import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/constants.dart';
-import 'package:pilipala/common/skeleton/video_card_v.dart';
-import 'package:pilipala/common/widgets/animated_dialog.dart';
-import 'package:pilipala/common/widgets/http_error.dart';
-import 'package:pilipala/common/widgets/overlay_pop.dart';
-import 'package:pilipala/pages/home/index.dart';
-import 'package:pilipala/pages/main/index.dart';
-import 'package:pilipala/pages/rcmd/index.dart';
+import 'package:PiliPalaX/common/constants.dart';
+import 'package:PiliPalaX/common/skeleton/video_card_v.dart';
+import 'package:PiliPalaX/common/widgets/animated_dialog.dart';
+import 'package:PiliPalaX/common/widgets/http_error.dart';
+import 'package:PiliPalaX/common/widgets/overlay_pop.dart';
+import 'package:PiliPalaX/pages/home/index.dart';
+import 'package:PiliPalaX/pages/main/index.dart';
 
 import '../../utils/grid.dart';
 import 'controller.dart';
@@ -46,8 +45,8 @@ class _LivePageState extends State<LivePage>
       () {
         if (scrollController.position.pixels >=
             scrollController.position.maxScrollExtent - 200) {
-          EasyThrottle.throttle('liveList', const Duration(seconds: 1), () {
-            _liveController.isLoadingMore = true;
+          EasyThrottle.throttle('liveList', const Duration(milliseconds: 200),
+              () {
             _liveController.onLoad();
           });
         }
@@ -109,24 +108,20 @@ class _LivePageState extends State<LivePage>
                     } else {
                       return HttpError(
                         errMsg: data['msg'],
-                        fn: () => {},
+                        fn: () {
+                          setState(() {
+                            _futureBuilderFuture =
+                                _liveController.queryLiveList('init');
+                          });
+                        },
                       );
                     }
                   } else {
-                    // 缓存数据
-                    if (_liveController.liveList.length > 1) {
-                      return contentGrid(
-                          _liveController, _liveController.liveList);
-                    }
-                    // 骨架屏
-                    else {
-                      return contentGrid(_liveController, []);
-                    }
+                    return contentGrid(_liveController, []);
                   }
                 },
               ),
             ),
-            LoadingMore(ctr: _liveController)
           ],
         ),
       ),

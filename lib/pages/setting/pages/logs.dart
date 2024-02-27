@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pilipala/common/widgets/no_data.dart';
+import 'package:PiliPalaX/common/widgets/no_data.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/loggeer.dart';
 
@@ -37,7 +37,7 @@ class _LogsPageState extends State<LogsPage> {
       return item
           .replaceAll(
               '============================== CATCHER 2 LOG ==============================',
-              'Pilipala错误日志 \n ********************')
+              'PiliPalaX错误日志 \n ********************')
           .replaceAll('DEVICE INFO', '设备信息')
           .replaceAll('APP INFO', '应用信息')
           .replaceAll('ERROR', '错误信息')
@@ -45,14 +45,19 @@ class _LogsPageState extends State<LogsPage> {
     }).toList();
     List<Map<String, dynamic>> result = [];
     for (String i in contentList) {
-      DateTime? date;
+      dynamic date;
       String body = i
           .split("\n")
           .map((l) {
             if (l.startsWith("Crash occurred on")) {
-              date = DateTime.parse(
-                l.split("Crash occurred on")[1].trim().split('.')[0],
-              );
+              try {
+                date = DateTime.parse(
+                  l.split("Crash occurred on")[1].trim().split('.')[0],
+                );
+              } catch (e) {
+                print(e.toString());
+                date = l.toString();
+              }
               return "";
             }
             return l;
@@ -77,7 +82,7 @@ class _LogsPageState extends State<LogsPage> {
 
   void feedback() {
     launchUrl(
-      Uri.parse('https://github.com/guozhigq/pilipala/issues'),
+      Uri.parse('https://github.com/orz12/pilipala/issues'),
       // 系统自带浏览器打开
       mode: LaunchMode.externalApplication,
     );

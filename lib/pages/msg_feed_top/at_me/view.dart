@@ -2,7 +2,7 @@ import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/widgets/network_img_layer.dart';
+import 'package:PiliPalaX/common/widgets/network_img_layer.dart';
 
 import 'controller.dart';
 
@@ -74,22 +74,33 @@ class _AtMePageState extends State<AtMePage> {
                         src: _atMeController.msgFeedAtMeList[i].user?.avatar,
                       ),
                       title: Text(
-                        "${_atMeController.msgFeedAtMeList[i].user?.nickname}  "
-                        "在${_atMeController.msgFeedAtMeList[i].item?.business}中@了我",
-                        style: Theme.of(context).textTheme.bodyMedium!,
-                      ),
-                      subtitle: Text(
-                          _atMeController
-                                  .msgFeedAtMeList[i].item?.sourceContent ??
-                              "",
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          "${_atMeController.msgFeedAtMeList[i].user?.nickname}  "
+                          "在${_atMeController.msgFeedAtMeList[i].item?.business}中@了我",
                           style: Theme.of(context)
                               .textTheme
-                              .labelMedium!
+                              .titleMedium!
                               .copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.outline)),
+                                color: Theme.of(context).colorScheme.primary,
+                              )),
+                      subtitle:
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text(
+                                  _atMeController
+                                      .msgFeedAtMeList[i].item?.sourceContent ??
+                                      "",
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                      color:
+                                      Theme.of(context).colorScheme.outline))
+                            ],
+                          ),
                       trailing: _atMeController
                                       .msgFeedAtMeList[i].item?.image !=
                                   null &&

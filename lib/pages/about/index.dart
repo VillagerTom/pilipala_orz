@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:pilipala/http/index.dart';
-import 'package:pilipala/models/github/latest.dart';
-import 'package:pilipala/utils/utils.dart';
+import 'package:PiliPalaX/http/index.dart';
+import 'package:PiliPalaX/models/github/latest.dart';
+import 'package:PiliPalaX/pages/setting/controller.dart';
+import 'package:PiliPalaX/utils/storage.dart';
+import 'package:PiliPalaX/utils/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/cache_manage.dart';
 
@@ -50,7 +55,7 @@ class _AboutPageState extends State<AboutPage> {
             ),
           ),
           ListTile(
-            title: Text('PiliPala',
+            title: Text('PiliPalaX',
                 textAlign: TextAlign.center,
                 style: Theme.of(context)
                     .textTheme
@@ -64,6 +69,7 @@ class _AboutPageState extends State<AboutPage> {
           ),
           Obx(
             () => ListTile(
+              onTap: () => _aboutController.tapOnVersion(),
               title: const Text('当前版本'),
               trailing: Text(_aboutController.currentVersion.value,
                   style: subTitleStyle),
@@ -100,27 +106,8 @@ class _AboutPageState extends State<AboutPage> {
             onTap: () => _aboutController.githubUrl(),
             title: const Text('Github'),
             trailing: Text(
-              'github.com/guozhigq/pilipala',
+              'github.com/orz12/pilipala',
               style: subTitleStyle,
-            ),
-          ),
-          ListTile(
-            onTap: () => _aboutController.webSiteUrl(),
-            title: const Text('访问官网'),
-            trailing: Text(
-              'https://pilipalanet.mysxl.cn',
-              style: subTitleStyle,
-            ),
-          ),
-          ListTile(
-            onTap: () => _aboutController.panDownload(),
-            title: const Text('网盘下载'),
-            trailing: Text(
-              '提取码：pili',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.outline,
-              ),
             ),
           ),
           ListTile(
@@ -133,7 +120,7 @@ class _AboutPageState extends State<AboutPage> {
             ),
           ),
           ListTile(
-            onTap: () => _aboutController.qqChanel(),
+            onTap: () => _aboutController.qqGroup(),
             title: const Text('QQ群'),
             trailing: Icon(
               Icons.arrow_forward_ios,
@@ -145,6 +132,14 @@ class _AboutPageState extends State<AboutPage> {
             onTap: () => _aboutController.tgChanel(),
             title: const Text('TG频道'),
             trailing: Icon(Icons.arrow_forward_ios, size: 16, color: outline),
+          ),
+          ListTile(
+            onTap: () => _aboutController.webSiteUrl(),
+            title: const Text('访问官网'),
+            trailing: Text(
+              'https://pilipalanet.mysxl.cn/pilipala-x',
+              style: subTitleStyle,
+            ),
           ),
           ListTile(
             onTap: () => _aboutController.aPay(),
@@ -161,11 +156,11 @@ class _AboutPageState extends State<AboutPage> {
               var cleanStatus = await CacheManage().clearCacheAll();
               if (cleanStatus) {
                 getCacheSize();
+                  SmartDialog.showToast('清除成功');
               }
             },
             title: const Text('清除缓存'),
             subtitle: Text('图片及网络缓存 $cacheSize', style: subTitleStyle),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: outline),
           ),
         ],
       ),
@@ -174,12 +169,15 @@ class _AboutPageState extends State<AboutPage> {
 }
 
 class AboutController extends GetxController {
+  Box setting = GStrorage.setting;
+  final SettingController settingController = Get.put(SettingController());
   RxString currentVersion = ''.obs;
   RxString remoteVersion = ''.obs;
   late LatestDataModel remoteAppInfo;
   RxBool isUpdate = true.obs;
   RxBool isLoading = true.obs;
   late LatestDataModel data;
+  RxInt count = 0.obs;
 
   @override
   void onInit() {
@@ -205,14 +203,23 @@ class AboutController extends GetxController {
 
   // 获取当前版本
   Future getCurrentApp() async {
-    var result = await PackageInfo.fromPlatform();
-    currentVersion.value = result.version;
+    var currentInfo = await PackageInfo.fromPlatform();
+    String buildNumber = currentInfo.buildNumber;
+    //if is android
+    if (Platform.isAndroid) {
+      buildNumber = buildNumber.substring(0,buildNumber.length - 1);
+    }
+    currentVersion.value = "${currentInfo.version}+$buildNumber";
   }
 
   // 获取远程版本
   Future getRemoteApp() async {
     var result = await Request().get(Api.latestApp, extra: {'ua': 'pc'});
-    data = LatestDataModel.fromJson(result.data);
+    if (result.data.isEmpty) {
+      SmartDialog.showToast('检查更新失败，github接口未返回数据，请检查网络');
+      return false;
+    }
+    data = LatestDataModel.fromJson(result.data[0]);
     remoteAppInfo = data;
     remoteVersion.value = data.tagName!;
     isUpdate.value =
@@ -228,32 +235,46 @@ class AboutController extends GetxController {
   // 跳转github
   githubUrl() {
     launchUrl(
-      Uri.parse('https://github.com/guozhigq/pilipala'),
+      Uri.parse('https://github.com/orz12/pilipala'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  githubRelease() {
+    launchUrl(
+      Uri.parse('https://github.com/guozhigq/pilipala/release'),
       mode: LaunchMode.externalApplication,
     );
   }
 
   // 从网盘下载
   panDownload() {
-    launchUrl(
-      Uri.parse('https://www.123pan.com/s/9sVqVv-flu0A.html'),
-      mode: LaunchMode.externalApplication,
+    Clipboard.setData(
+      const ClipboardData(text: 'pili'),
+    );
+    SmartDialog.showToast(
+      '已复制提取码：pili',
+      displayTime: const Duration(milliseconds: 500),
+    ).then(
+      (value) => launchUrl(
+        Uri.parse('https://www.123pan.com/s/9sVqVv-flu0A.html'),
+        mode: LaunchMode.externalApplication,
+      ),
     );
   }
-
   // 问题反馈
   feedback() {
     launchUrl(
-      Uri.parse('https://github.com/guozhigq/pilipala/issues'),
+      Uri.parse('https://github.com/orz12/pilipala/issues'),
       // 系统自带浏览器打开
       mode: LaunchMode.externalApplication,
     );
   }
 
-  // qq频道
-  qqChanel() {
+  // qq群
+  qqGroup() {
     Clipboard.setData(
-      const ClipboardData(text: '489981949'),
+      const ClipboardData(text: '392176105'),
     );
     SmartDialog.showToast('已复制QQ群号');
   }
@@ -274,11 +295,19 @@ class AboutController extends GetxController {
     );
   }
 
+  // 官网
+  webSiteUrl() {
+    launchUrl(
+      Uri.parse('https://pilipalanet.mysxl.cn/pilipala-x'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
   aPay() {
     try {
       launchUrl(
         Uri.parse(
-            'alipayqr://platformapi/startapp?saId=10000007&qrcode=https://qr.alipay.com/fkx14623ddwl1ping3ddd73'),
+            'alipayqr://platformapi/startapp?saId=10000007&qrcode=https://qr.alipay.com/fkx12886sndepheaukiabc8'),
         mode: LaunchMode.externalApplication,
       );
     } catch (e) {
@@ -286,16 +315,20 @@ class AboutController extends GetxController {
     }
   }
 
-  // 官网
-  webSiteUrl() {
-    launchUrl(
-      Uri.parse('https://pilipalanet.mysxl.cn'),
-      mode: LaunchMode.externalApplication,
-    );
-  }
-
   // 日志
   logs() {
     Get.toNamed('/logs');
+  }
+
+  tapOnVersion() {
+    if (settingController.hiddenSettingUnlocked.value) {
+      SmartDialog.showToast('您已解锁开发人员选项, 无需再次操作');
+      return;
+    }
+    count.value++;
+    if (count.value == 5) {
+      setting.put(SettingBoxKey.hiddenSettingUnlocked, true);
+      SmartDialog.showToast('恭喜您发现了开发人员选项!');
+    }
   }
 }

@@ -1,8 +1,9 @@
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/widgets/video_card_h.dart';
-import 'package:pilipala/utils/utils.dart';
+import 'package:PiliPalaX/common/widgets/video_card_h.dart';
+import 'package:PiliPalaX/utils/utils.dart';
+import '../../common/widgets/http_error.dart';
 import 'controller.dart';
 
 class MemberArchivePage extends StatefulWidget {
@@ -86,10 +87,16 @@ class _MemberArchivePageState extends State<MemberArchivePage> {
                           : const SliverToBoxAdapter(),
                     );
                   } else {
-                    return const SliverToBoxAdapter();
+                    return HttpError(
+                      errMsg: snapshot.data['msg'],
+                      fn: () {},
+                    );
                   }
                 } else {
-                  return const SliverToBoxAdapter();
+                  return HttpError(
+                    errMsg: snapshot.data['msg'],
+                    fn: () {},
+                  );
                 }
               } else {
                 return const SliverToBoxAdapter();

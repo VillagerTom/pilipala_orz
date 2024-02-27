@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/models/common/tab_type.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/models/common/tab_type.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 import '../../http/index.dart';
 
 class HomeController extends GetxController with GetTickerProviderStateMixin {
@@ -26,6 +26,7 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
   late List defaultTabs;
   late List<String> tabbarSort;
   RxString defaultSearch = ''.obs;
+  late bool enableGradientBg;
 
   @override
   void onInit() {
@@ -40,6 +41,8 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     if (setting.get(SettingBoxKey.enableSearchWord, defaultValue: true)) {
       searchDefault();
     }
+    enableGradientBg =
+        setting.get(SettingBoxKey.enableGradientBg, defaultValue: true);
   }
 
   void onRefresh() {

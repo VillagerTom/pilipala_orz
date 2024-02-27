@@ -12,16 +12,6 @@ Future<void> landScape() async {
     if (kIsWeb) {
       await document.documentElement?.requestFullscreen();
     } else if (Platform.isAndroid || Platform.isIOS) {
-      // await SystemChrome.setEnabledSystemUIMode(
-      //   SystemUiMode.immersiveSticky,
-      //   overlays: [],
-      // );
-      // await SystemChrome.setPreferredOrientations(
-      //   [
-      //     DeviceOrientation.landscapeLeft,
-      //     DeviceOrientation.landscapeRight,
-      //   ],
-      // );
       await AutoOrientation.landscapeAutoMode(forceSensor: true);
     } else if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
       await const MethodChannel('com.alexmercerind/media_kit_video')
@@ -52,14 +42,14 @@ Future<void> autoScreen() async {
   ]);
 }
 
-Future<void> enterFullScreen() async {
+Future<void> hideStatusBar() async {
   await SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.immersiveSticky,
   );
 }
 
 //退出全屏显示
-Future<void> exitFullScreen() async {
+Future<void> showStatusBar() async {
   dynamic document;
   late SystemUiMode mode = SystemUiMode.edgeToEdge;
   try {
@@ -74,7 +64,6 @@ Future<void> exitFullScreen() async {
         mode,
         overlays: SystemUiOverlay.values,
       );
-      await SystemChrome.setPreferredOrientations([]);
     } else if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
       await const MethodChannel('com.alexmercerind/media_kit_video')
           .invokeMethod(

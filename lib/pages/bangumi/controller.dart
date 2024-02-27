@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:pilipala/http/bangumi.dart';
-import 'package:pilipala/models/bangumi/list.dart';
-import 'package:pilipala/utils/storage.dart';
+import 'package:PiliPalaX/http/bangumi.dart';
+import 'package:PiliPalaX/models/bangumi/list.dart';
+import 'package:PiliPalaX/utils/storage.dart';
 
 class BangumiController extends GetxController {
   final ScrollController scrollController = ScrollController();
-  RxList<BangumiListItemModel> bangumiList = [BangumiListItemModel()].obs;
-  RxList<BangumiListItemModel> bangumiFollowList = [BangumiListItemModel()].obs;
+  RxList<BangumiListItemModel> bangumiList = <BangumiListItemModel>[].obs;
+  RxList<BangumiListItemModel> bangumiFollowList = <BangumiListItemModel>[].obs;
   int _currentPage = 1;
   bool isLoadingMore = true;
   Box userInfoCache = GStrorage.userInfo;

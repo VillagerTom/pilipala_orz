@@ -1,10 +1,10 @@
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/skeleton/video_card_h.dart';
-import 'package:pilipala/common/widgets/http_error.dart';
-import 'package:pilipala/common/widgets/no_data.dart';
-import 'package:pilipala/pages/history/index.dart';
+import 'package:PiliPalaX/common/skeleton/video_card_h.dart';
+import 'package:PiliPalaX/common/widgets/http_error.dart';
+import 'package:PiliPalaX/common/widgets/no_data.dart';
+import 'package:PiliPalaX/pages/history/index.dart';
 
 import 'widgets/item.dart';
 
@@ -70,10 +70,6 @@ class _HistoryPageState extends State<HistoryPage> {
         child1: AppBar(
           titleSpacing: 0,
           centerTitle: false,
-          leading: IconButton(
-            onPressed: () => Get.back(),
-            icon: const Icon(Icons.arrow_back_outlined),
-          ),
           title: Text(
             '观看记录',
             style: Theme.of(context).textTheme.titleMedium,

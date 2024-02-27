@@ -4,14 +4,14 @@ import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
-import 'package:pilipala/common/constants.dart';
-import 'package:pilipala/common/skeleton/video_card_v.dart';
-import 'package:pilipala/common/widgets/animated_dialog.dart';
-import 'package:pilipala/common/widgets/http_error.dart';
-import 'package:pilipala/common/widgets/overlay_pop.dart';
-import 'package:pilipala/common/widgets/video_card_v.dart';
-import 'package:pilipala/pages/home/index.dart';
-import 'package:pilipala/pages/main/index.dart';
+import 'package:PiliPalaX/common/constants.dart';
+import 'package:PiliPalaX/common/skeleton/video_card_v.dart';
+import 'package:PiliPalaX/common/widgets/animated_dialog.dart';
+import 'package:PiliPalaX/common/widgets/http_error.dart';
+import 'package:PiliPalaX/common/widgets/overlay_pop.dart';
+import 'package:PiliPalaX/common/widgets/video_card_v.dart';
+import 'package:PiliPalaX/pages/home/index.dart';
+import 'package:PiliPalaX/pages/main/index.dart';
 
 import '../../utils/grid.dart';
 import 'controller.dart';
@@ -45,7 +45,7 @@ class _RcmdPageState extends State<RcmdPage>
         if (scrollController.position.pixels >=
             scrollController.position.maxScrollExtent - 200) {
           EasyThrottle.throttle(
-              'my-throttler', const Duration(milliseconds: 500), () {
+              'my-throttler', const Duration(milliseconds: 200), () {
             _rcmdController.isLoadingMore = true;
             _rcmdController.onLoad();
           });
@@ -114,6 +114,7 @@ class _RcmdPageState extends State<RcmdPage>
                         errMsg: data['msg'],
                         fn: () {
                           setState(() {
+                            _rcmdController.isLoadingMore = true;
                             _futureBuilderFuture =
                                 _rcmdController.queryRcmdFeed('init');
                           });
@@ -126,7 +127,6 @@ class _RcmdPageState extends State<RcmdPage>
                 },
               ),
             ),
-            LoadingMore(ctr: _rcmdController),
           ],
         ),
       ),
@@ -173,36 +173,6 @@ class _RcmdPageState extends State<RcmdPage>
               : const VideoCardVSkeleton();
         },
         childCount: videoList!.isNotEmpty ? videoList!.length : 10,
-      ),
-    );
-  }
-}
-
-class LoadingMore extends StatelessWidget {
-  final dynamic ctr;
-  const LoadingMore({super.key, this.ctr});
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Container(
-        height: MediaQuery.of(context).padding.bottom + 80,
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-        child: GestureDetector(
-          onTap: () {
-            if (ctr != null) {
-              ctr!.isLoadingMore = true;
-              ctr!.onLoad();
-            }
-          },
-          child: Center(
-            child: Text(
-              '点击加载更多 👇',
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.outline, fontSize: 13),
-            ),
-          ),
-        ),
       ),
     );
   }

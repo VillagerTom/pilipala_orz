@@ -1,11 +1,10 @@
-// import 'package:hive/hive.dart';
 import 'dart:io';
-
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pilipala/models/model_owner.dart';
-import 'package:pilipala/models/search/hot.dart';
-import 'package:pilipala/models/user/info.dart';
+import 'package:PiliPalaX/models/model_owner.dart';
+import 'package:PiliPalaX/models/search/hot.dart';
+import 'package:PiliPalaX/models/user/info.dart';
+import 'global_data.dart';
 
 class GStrorage {
   static late final Box<dynamic> userInfo;
@@ -44,6 +43,8 @@ class GStrorage {
     );
     // 视频设置
     video = await Hive.openBox('video');
+    GlobalData().imgQuality =
+        setting.get(SettingBoxKey.defaultPicQa, defaultValue: 10); // 设置全局变量
   }
 
   static void regAdapter() {
@@ -97,6 +98,7 @@ class SettingBoxKey {
 
       // youtube 双击快进快退
       enableQuickDouble = 'enableQuickDouble',
+      fullScreenGestureReverse = 'fullScreenGestureReverse',
       enableShowDanmaku = 'enableShowDanmaku',
       enableBackgroundPlay = 'enableBackgroundPlay',
 
@@ -137,7 +139,9 @@ class SettingBoxKey {
       hideSearchBar = 'hideSearchBar', // 收起顶栏
       hideTabBar = 'hideTabBar', // 收起底栏
       tabbarSort = 'tabbarSort', // 首页tabbar
-      dynamicBadgeMode = 'dynamicBadgeMode';
+      dynamicBadgeMode = 'dynamicBadgeMode',
+      hiddenSettingUnlocked = 'hiddenSettingUnlocked',
+      enableGradientBg = 'enableGradientBg';
 }
 
 class LocalCacheKey {
