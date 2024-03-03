@@ -6,7 +6,6 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:PiliPalaX/common/skeleton/video_reply.dart';
 import 'package:PiliPalaX/common/widgets/html_render.dart';
-import 'package:PiliPalaX/common/widgets/http_error.dart';
 import 'package:PiliPalaX/common/widgets/network_img_layer.dart';
 import 'package:PiliPalaX/models/common/reply_type.dart';
 import 'package:PiliPalaX/pages/video/detail/reply/widgets/reply_item.dart';
@@ -136,6 +135,7 @@ class _HtmlRenderPageState extends State<HtmlRenderPage>
         actions: [
           const SizedBox(width: 4),
           IconButton(
+            tooltip: '用内置浏览器打开',
             onPressed: () {
               Get.toNamed('/webview', parameters: {
                 'url': url.startsWith('http') ? url : 'https:$url',
@@ -148,6 +148,36 @@ class _HtmlRenderPageState extends State<HtmlRenderPage>
           PopupMenuButton(
             icon: const Icon(Icons.more_vert),
             itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                onTap: () => {
+                  _htmlRenderCtr.reqHtml(id),
+                },
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.refresh, size: 19),
+                    SizedBox(width: 10),
+                    Text('刷新'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                onTap: () => {
+                  Get.toNamed('/webview', parameters: {
+                    'url': url.startsWith('http') ? url : 'https:$url',
+                    'type': 'url',
+                    'pageTitle': title,
+                  }),
+                },
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.open_in_new, size: 19),
+                    SizedBox(width: 10),
+                    Text('内置浏览器打开'),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 onTap: () => {
                   Clipboard.setData(ClipboardData(text: url)),

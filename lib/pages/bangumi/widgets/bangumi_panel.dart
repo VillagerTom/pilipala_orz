@@ -95,6 +95,7 @@ class _BangumiPanelState extends State<BangumiPanel> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         IconButton(
+                          tooltip: '关闭',
                           icon: const Icon(Icons.close),
                           onPressed: () => Navigator.pop(context),
                         ),
@@ -116,9 +117,10 @@ class _BangumiPanelState extends State<BangumiPanel> {
                           dense: false,
                           leading: index == currentIndex
                               ? Image.asset(
-                                  'assets/images/live.gif',
+                                  'assets/images/live.png',
                                   color: Theme.of(context).colorScheme.primary,
                                   height: 12,
+                                  semanticLabel: "正在播放：",
                                 )
                               : null,
                           title: Text(
@@ -134,6 +136,7 @@ class _BangumiPanelState extends State<BangumiPanel> {
                               ? Image.asset(
                                   'assets/images/big-vip.png',
                                   height: 20,
+                                  semanticLabel: "大会员",
                                 )
                               : const SizedBox(),
                         ),
@@ -240,6 +243,7 @@ class _BangumiPanelState extends State<BangumiPanel> {
                                   'assets/images/live.png',
                                   color: Theme.of(context).colorScheme.primary,
                                   height: 12,
+                                  semanticLabel: "正在播放：",
                                 ),
                                 const SizedBox(width: 6)
                               ],
@@ -259,6 +263,7 @@ class _BangumiPanelState extends State<BangumiPanel> {
                                   Image.asset(
                                     'assets/images/big-vip.png',
                                     height: 16,
+                                    semanticLabel: "大会员",
                                   ),
                                 ],
                                 if (widget.pages[i].badge != '会员') ...[

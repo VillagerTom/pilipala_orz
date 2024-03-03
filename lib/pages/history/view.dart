@@ -6,6 +6,8 @@ import 'package:PiliPalaX/common/widgets/http_error.dart';
 import 'package:PiliPalaX/common/widgets/no_data.dart';
 import 'package:PiliPalaX/pages/history/index.dart';
 
+import '../../common/constants.dart';
+import '../../utils/grid.dart';
 import 'widgets/item.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -76,6 +78,7 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
           actions: [
             IconButton(
+              tooltip: '搜索',
               onPressed: () => Get.toNamed('/historySearch'),
               icon: const Icon(Icons.search_outlined),
             ),
@@ -129,6 +132,7 @@ class _HistoryPageState extends State<HistoryPage> {
           titleSpacing: 0,
           centerTitle: false,
           leading: IconButton(
+            tooltip: '取消',
             onPressed: () {
               _historyController.enableMultiple.value = false;
               for (var item in _historyController.historyList) {
@@ -187,7 +191,18 @@ class _HistoryPageState extends State<HistoryPage> {
                   if (data['status']) {
                     return Obx(
                       () => _historyController.historyList.isNotEmpty
-                          ? SliverList(
+                          ? SliverGrid(
+                              gridDelegate:
+                                  SliverGridDelegateWithMaxCrossAxisExtent(
+                                      mainAxisSpacing: StyleString.cardSpace,
+                                      crossAxisSpacing: StyleString.safeSpace,
+                                      maxCrossAxisExtent: Grid.maxRowWidth * 2,
+                                      mainAxisExtent: Grid.calculateActualWidth(
+                                              context,
+                                              Grid.maxRowWidth * 2,
+                                              StyleString.safeSpace) /
+                                          2.1 /
+                                          StyleString.aspectRatio),
                               delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                 return HistoryItem(

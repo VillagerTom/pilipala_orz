@@ -520,7 +520,7 @@ class VideoHttp {
     }
     List<Map<String, String>> subtitlesVtt = [];
 
-    String subtitleTimecode(double seconds) {
+    String subtitleTimecode(num seconds) {
       int h = (seconds / 3600).floor();
       int m = ((seconds % 3600) / 60).floor();
       int s = (seconds % 60).floor();
@@ -581,6 +581,13 @@ class VideoHttp {
       } else {
         SmartDialog.showToast("字幕${i['lan_doc']}加载失败, ${res.data['message']}");
       }
+    }
+    if (subtitlesVtt.isNotEmpty) {
+      subtitlesVtt.insert(0, {
+        'language': '',
+        'title': '关闭字幕',
+        'text': ""
+      });
     }
     return subtitlesVtt;
   }

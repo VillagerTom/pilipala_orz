@@ -146,7 +146,7 @@ class HistoryItem extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                StyleString.safeSpace, 5, StyleString.safeSpace, 5),
+                StyleString.safeSpace, 0, StyleString.safeSpace, 0),
             child: LayoutBuilder(
               builder: (context, boxConstraints) {
                 double width =
@@ -230,6 +230,7 @@ class HistoryItem extends StatelessWidget {
                                             const Duration(milliseconds: 250),
                                         curve: Curves.easeInOut,
                                         child: IconButton(
+                                          tooltip: '取消选择',
                                           style: ButtonStyle(
                                             padding: MaterialStateProperty.all(
                                                 EdgeInsets.zero),

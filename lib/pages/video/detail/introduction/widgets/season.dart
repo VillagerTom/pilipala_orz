@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:PiliPalaX/models/video_detail_res.dart';
@@ -23,9 +24,9 @@ class SeasonPanel extends StatefulWidget {
 }
 
 class _SeasonPanelState extends State<SeasonPanel> {
-  late List<EpisodeItem> episodes;
+  List<EpisodeItem>? episodes;
   late int cid;
-  late int currentIndex;
+  int currentIndex = 0;
   final String heroTag = Get.arguments['heroTag'];
   late VideoDetailController _videoDetailController;
   final ScrollController _scrollController = ScrollController();
@@ -50,16 +51,19 @@ class _SeasonPanelState extends State<SeasonPanel> {
         }
       }
     }
+    if (episodes == null) {
+      return;
+    }
 
     /// 取对应 season_id 的 episodes
     // episodes = widget.ugcSeason.sections!
     //     .firstWhere((e) => e.seasonId == widget.ugcSeason.id)
     //     .episodes!;
-    currentIndex = episodes.indexWhere((EpisodeItem e) => e.cid == cid);
+    currentIndex = episodes!.indexWhere((EpisodeItem e) => e.cid == cid);
     _videoDetailController.cid.listen((int p0) {
       cid = p0;
       setState(() {});
-      currentIndex = episodes.indexWhere((EpisodeItem e) => e.cid == cid);
+      currentIndex = episodes!.indexWhere((EpisodeItem e) => e.cid == cid);
     });
   }
 
@@ -82,6 +86,9 @@ class _SeasonPanelState extends State<SeasonPanel> {
 
   @override
   Widget build(BuildContext context) {
+    if (episodes == null) {
+      return const SizedBox();
+    }
     return Builder(builder: (BuildContext context) {
       return Container(
         margin: const EdgeInsets.only(
@@ -115,10 +122,11 @@ class _SeasonPanelState extends State<SeasonPanel> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '合集（${episodes.length}）',
+                                '合集（${episodes!.length}）',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               IconButton(
+                                tooltip: '关闭',
                                 icon: const Icon(Icons.close),
                                 onPressed: () => Navigator.pop(context),
                               ),
@@ -136,23 +144,24 @@ class _SeasonPanelState extends State<SeasonPanel> {
                               bottom: MediaQuery.of(context).padding.bottom),
                           child: Material(
                             child: ScrollablePositionedList.builder(
-                              itemCount: episodes.length,
+                              itemCount: episodes!.length,
                               itemBuilder: (BuildContext context, int index) =>
                                   ListTile(
                                 onTap: () =>
-                                    changeFucCall(episodes[index], index),
+                                    changeFucCall(episodes![index], index),
                                 dense: false,
                                 leading: index == currentIndex
                                     ? Image.asset(
-                                        'assets/images/live.gif',
+                                        'assets/images/live.png',
                                         color: Theme.of(context)
                                             .colorScheme
                                             .primary,
                                         height: 12,
+                                        semanticLabel: "正在播放：",
                                       )
                                     : null,
                                 title: Text(
-                                  episodes[index].title!,
+                                  episodes![index].title!,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: index == currentIndex
@@ -186,19 +195,23 @@ class _SeasonPanelState extends State<SeasonPanel> {
                   ),
                   const SizedBox(width: 15),
                   Image.asset(
-                    'assets/images/live.gif',
+                    'assets/images/live.png',
                     color: Theme.of(context).colorScheme.primary,
                     height: 12,
+                    semanticLabel: "正在播放：",
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    '${currentIndex + 1}/${episodes.length}',
+                    '${currentIndex + 1}/${episodes!.length}',
                     style: Theme.of(context).textTheme.labelMedium,
+                    semanticsLabel:
+                        '第${currentIndex + 1}集，共${episodes!.length}集',
                   ),
                   const SizedBox(width: 6),
                   const Icon(
                     Icons.arrow_forward_ios_outlined,
                     size: 13,
+                    semanticLabel: '查看',
                   )
                 ],
               ),

@@ -22,6 +22,8 @@ import 'package:PiliPalaX/utils/feed_back.dart';
 import 'package:PiliPalaX/utils/storage.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:universal_platform/universal_platform.dart';
+
+import '../../models/video/play/subtitle.dart';
 // import 'package:wakelock_plus/wakelock_plus.dart';
 
 Box videoStorage = GStrorage.video;
@@ -95,8 +97,8 @@ class PlPlayerController {
   int _cid = 0;
   int _heartDuration = 0;
   bool _enableHeart = true;
-  bool _isFirstTime = true;
-  final RxList<Map<String,String>> _vttSubtitles = <Map<String,String>>[].obs;
+  final RxList<Map<String, String>> _vttSubtitles = <Map<String, String>>[].obs;
+  final RxInt _vttSubtitlesIndex = 0.obs;
 
   Timer? _timer;
   Timer? _timerForSeek;
@@ -150,7 +152,8 @@ class PlPlayerController {
   Stream<bool> get onMuteChanged => _mute.stream;
 
   // 视频字幕
-  RxList<dynamic> get vttSubtitles => _vttSubtitles;
+  RxList<Map<String,String>> get vttSubtitles => _vttSubtitles;
+  RxInt get vttSubtitlesIndex => _vttSubtitlesIndex;
 
   /// [videoPlayerController] instance of Player
   Player? get videoPlayerController => _videoPlayerController;
@@ -282,8 +285,7 @@ class PlPlayerController {
     danmakuDurationVal =
         localCache.get(LocalCacheKey.danmakuDuration, defaultValue: 4.0);
     // 描边粗细
-    strokeWidth =
-        localCache.get(LocalCacheKey.strokeWidth, defaultValue: 1.5);
+    strokeWidth = localCache.get(LocalCacheKey.strokeWidth, defaultValue: 1.5);
     playRepeat = PlayRepeat.values.toList().firstWhere(
           (e) =>
               e.value ==
@@ -303,6 +305,7 @@ class PlPlayerController {
     for (final PlaySpeed i in PlaySpeed.values) {
       speedsList.add(i.value);
     }
+    speedsList.sort();
 
     // _playerEventSubs = onPlayerStatusChanged.listen((PlayerStatus status) {
     //   if (status == PlayerStatus.playing) {
@@ -346,8 +349,6 @@ class PlPlayerController {
     int cid = 0,
     // 历史记录开关
     bool enableHeart = true,
-    // 是否首次加载
-    bool isFirstTime = true,
   }) async {
     try {
       _autoPlay = autoplay;
@@ -361,7 +362,6 @@ class PlPlayerController {
       _bvid = bvid;
       _cid = cid;
       _enableHeart = enableHeart;
-      _isFirstTime = isFirstTime;
 
       if (_videoPlayerController != null &&
           _videoPlayerController!.state.playing) {
@@ -377,7 +377,6 @@ class PlPlayerController {
       // 获取视频时长 00:00
       _duration.value = duration ?? _videoPlayerController!.state.duration;
       updateDurationSecond();
-      refreshSubtitles();
       // 数据加载完成
       dataStatus.status.value = DataStatus.loaded;
 
@@ -386,11 +385,24 @@ class PlPlayerController {
         startListeners();
       }
       await _initializePlayer(seekTo: seekTo, duration: _duration.value);
-      bool autoEnterFullcreen =
-          setting.get(SettingBoxKey.enableAutoEnter, defaultValue: false);
-      if (autoEnterFullcreen && _isFirstTime) {
-        await Future.delayed(const Duration(milliseconds: 100));
-        triggerFullScreen(status: true);
+      if (videoType.value != 'live') {
+        refreshSubtitles().then((value) {
+          if (_vttSubtitles.isNotEmpty){
+            String preference = setting.get(SettingBoxKey.subtitlePreference,
+                defaultValue: SubtitlePreference.values.first.index);
+            if (preference == 'on') {
+              setSubtitle(vttSubtitles[1]);
+            } else if (preference == 'withoutAi') {
+              for (int i = 1; i < _vttSubtitles.length; i++) {
+                if (_vttSubtitles[i]['language']!.startsWith('ai')) {
+                  continue;
+                }
+                setSubtitle(vttSubtitles[i]);
+                break;
+              }
+            }
+          }
+        });
       }
     } catch (err) {
       dataStatus.status.value = DataStatus.error;
@@ -426,6 +438,7 @@ class PlPlayerController {
         );
 
     var pp = player.platform as NativePlayer;
+    await pp.setProperty("audio-pitch-correction", "scaletempo2");
     // 解除倍速限制
     await pp.setProperty("af", "scaletempo2=max-speed=8");
     //  音量不一致
@@ -433,7 +446,10 @@ class PlPlayerController {
       await pp.setProperty("volume-max", "100");
       await pp.setProperty("ao", "audiotrack,opensles");
     }
-
+    // // vo=gpu-next & gpu-context=android & gpu-api=opengl
+    // await pp.setProperty("vo", "gpu-next");
+    // await pp.setProperty("gpu-context", "android");
+    // await pp.setProperty("gpu-api", "opengl");
     await player.setAudioTrack(
       AudioTrack.auto(),
     );
@@ -546,7 +562,9 @@ class PlPlayerController {
 
           /// 触发回调事件
           for (var element in _statusListeners) {
-            element(event ? PlayerStatus.playing : PlayerStatus.paused);
+            if (element != null) {
+              element(event ? PlayerStatus.playing : PlayerStatus.paused);
+            }
           }
           if (videoPlayerController!.state.position.inSeconds != 0) {
             makeHeartBeat(positionSeconds.value, type: 'status');
@@ -950,8 +968,10 @@ class PlPlayerController {
     if (!isFullScreen.value && status) {
       // StatusBarControl.setHidden(true, animation: StatusBarAnimation.FADE);
       hideStatusBar();
+
       /// 按照视频宽高比决定全屏方向
       toggleFullScreen(true);
+
       /// 进入全屏
       FullScreenMode mode = FullScreenModeCode.fromCode(
           setting.get(SettingBoxKey.fullScreenMode, defaultValue: 0))!;
@@ -968,7 +988,7 @@ class PlPlayerController {
       // StatusBarControl.setHidden(false, animation: StatusBarAnimation.FADE);
       showStatusBar();
       toggleFullScreen(false);
-      if (!setting.get(SettingBoxKey.horizontalScreen, defaultValue: false)){
+      if (!setting.get(SettingBoxKey.horizontalScreen, defaultValue: false)) {
         await verticalScreen();
       }
     }
@@ -1084,10 +1104,9 @@ class PlPlayerController {
     }
   }
 
-  void refreshSubtitles() async {
+  Future refreshSubtitles() async {
     _vttSubtitles.clear();
-    Map res = await VideoHttp.subtitlesJson(
-        bvid: _bvid, cid: _cid);
+    Map res = await VideoHttp.subtitlesJson(bvid: _bvid, cid: _cid);
     if (!res["status"]) {
       SmartDialog.showToast('查询字幕错误，${res["msg"]}');
     }
@@ -1095,70 +1114,24 @@ class PlPlayerController {
       return;
     }
     _vttSubtitles.value = await VideoHttp.vttSubtitles(res["data"]);
-    if (_vttSubtitles.isEmpty) {
-      // SmartDialog.showToast('字幕均加载失败');
-      return;
-    }
-  }
-
-  /// 选择字幕
-  void showSetSubtitleSheet() async {
-    showDialog(
-      context: Get.context!,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('选择字幕（测试）'),
-          content: StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return Wrap(
-                  spacing: 8,
-                  runSpacing: 2,
-                  children: [
-                    FilledButton.tonal(
-                      onPressed: () async {
-                        await removeSubtitle();
-                        Get.back();
-                      },
-                      child: const Text("关闭字幕"),
-                    ),
-                    for (final Map<String, String> i in _vttSubtitles) ...<Widget>[
-                      FilledButton.tonal(
-                        onPressed: () async {
-                          await setSubtitle(i);
-                          Get.back();
-                        },
-                        child: Text(i["title"]!),
-                      ),
-                    ]
-                  ],
-                );
-              }),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Get.back(),
-              child: Text(
-                '取消',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  removeSubtitle() {
-    _videoPlayerController?.setSubtitleTrack(SubtitleTrack.no());
+    // if (_vttSubtitles.isEmpty) {
+    //   SmartDialog.showToast('字幕均加载失败');
+    // }
+    return;
   }
 
   // 设定字幕轨道
-  setSubtitle(Map<String,String> s) {
-    _videoPlayerController?.setSubtitleTrack(
-      SubtitleTrack.data(
-        s['text']!,
-        title: s['title']!,
-        language: s['language']!,
-      )
-    );
+  setSubtitle(Map<String, String> s) {
+    if (s['text'] == null) {
+      _videoPlayerController?.setSubtitleTrack(SubtitleTrack.no());
+      _vttSubtitlesIndex.value = 0;
+      return;
+    }
+    _videoPlayerController?.setSubtitleTrack(SubtitleTrack.data(
+      s['text']!,
+      title: s['title']!,
+      language: s['language']!,
+    ));
+    _vttSubtitlesIndex.value = _vttSubtitles.indexOf(s);
   }
 }

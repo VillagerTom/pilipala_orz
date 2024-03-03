@@ -50,8 +50,6 @@ class _VideoDetailPageState extends State<VideoDetailPage>
 
   final Box<dynamic> localCache = GStrorage.localCache;
   final Box<dynamic> setting = GStrorage.setting;
-  late double statusBarHeight;
-  final double videoHeight = Get.size.width * 9 / 16;
   late Future _futureBuilderFuture;
   // 自动退出全屏
   late bool autoExitFullcreen;
@@ -84,7 +82,6 @@ class _VideoDetailPageState extends State<VideoDetailPage>
       videoPlayerServiceHandler.onVideoDetailChange(
           bangumiIntroController.bangumiDetail.value, p0);
     });
-    statusBarHeight = localCache.get('statusBarHeight');
     autoExitFullcreen =
         setting.get(SettingBoxKey.enableAutoExit, defaultValue: false);
     horizontalScreen =
@@ -105,6 +102,16 @@ class _VideoDetailPageState extends State<VideoDetailPage>
       plPlayerController = videoDetailController.plPlayerController;
       plPlayerController!.addStatusLister(playerListener);
       listenFullScreenStatus();
+      autoEnterFullscreen();
+    }
+  }
+
+  void autoEnterFullscreen() async {
+    bool autoEnterFullscreen =
+    setting.get(SettingBoxKey.enableAutoEnter, defaultValue: false);
+    if (autoEnterFullscreen && videoDetailController.isFirstTime) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      plPlayerController!.triggerFullScreen(status: true);
     }
   }
 
@@ -161,6 +168,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     plPlayerController = videoDetailController.plPlayerController;
     plPlayerController!.addStatusLister(playerListener);
     listenFullScreenStatus();
+    autoEnterFullscreen();
     videoDetailController.autoPlay.value = true;
     videoDetailController.isShowCover.value = false;
   }
@@ -198,7 +206,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
       });
       if (!status) {
         showStatusBar();
-        if (setting.get(SettingBoxKey.horizontalScreen, defaultValue: false)) {
+        if (horizontalScreen) {
           autoScreen();
         } else {
           verticalScreen();
@@ -326,6 +334,10 @@ class _VideoDetailPageState extends State<VideoDetailPage>
                   Obx(
                     () {
                       final double videoheight = Get.width * 9 / 16;
+                      // final double videoheight =
+                      //     plPlayerController?.direction.value == 'vertical'
+                      //         ? Get.width
+                      //         : Get.width * 9 / 16;
                       final double videowidth = Get.width;
                       return SizedBox(
                         height: MediaQuery.of(context).orientation ==
@@ -485,15 +497,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
                       );
                     },
                   ),
-                  SizedBox(
-                    height: MediaQuery.of(context).orientation ==
-                                Orientation.landscape ||
-                            isFullScreen.value == true
-                        ? 0
-                        : Get.height -
-                            Get.width * 9 / 16 -
-                            MediaQuery.of(context).padding.top,
-                    width: MediaQuery.of(context).size.width,
+                  Expanded(
                     child: ColoredBox(
                       key: Key(heroTag),
                       color: Theme.of(context).colorScheme.background,

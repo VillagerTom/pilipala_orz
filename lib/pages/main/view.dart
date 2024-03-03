@@ -87,9 +87,6 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    Box localCache = GStrorage.localCache;
-    double statusBarHeight = MediaQuery.of(context).padding.top;
-    localCache.put('statusBarHeight', statusBarHeight);
     return PopScope(
       canPop: false,
       onPopInvoked: (bool didPop) async {
@@ -138,7 +135,12 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
                                               DynamicBadgeMode.hidden &&
                                           e['count'] > 0,
                                   child: e['icon'],
-                                ),
+                                  backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                                  textColor: Theme.of(context)
+                                      .colorScheme
+                                      .onInverseSurface,
+                                  ),
                               ),
                               selectedIcon: e['selectIcon'],
                               label: e['label'],
@@ -169,7 +171,12 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
                                               DynamicBadgeMode.hidden &&
                                           e['count'] > 0,
                                   child: e['icon'],
-                                ),
+                                  backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                                  textColor: Theme.of(context)
+                                      .colorScheme
+                                      .onInverseSurface,
+                                  ),
                               ),
                               activeIcon: e['selectIcon'],
                               label: e['label'],

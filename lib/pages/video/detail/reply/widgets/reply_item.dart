@@ -121,6 +121,7 @@ class ReplyItem extends StatelessWidget {
               child: Image.asset(
                 'assets/images/big-vip.png',
                 height: 14,
+                semanticLabel: "大会员",
               ),
             ),
           ),
@@ -168,6 +169,7 @@ class ReplyItem extends StatelessWidget {
                       Image.asset(
                         'assets/images/lv/lv${replyItem!.member!.level}.png',
                         height: 11,
+                        semanticLabel: "等级：${replyItem!.member!.level}",
                       ),
                       const SizedBox(width: 6),
                       if (replyItem!.isUp!)
@@ -210,28 +212,30 @@ class ReplyItem extends StatelessWidget {
         // title
         Container(
           margin: const EdgeInsets.only(top: 10, left: 45, right: 6, bottom: 4),
-          child: Text.rich(
-            style: const TextStyle(height: 1.75),
-            maxLines:
-                replyItem!.content!.isText! && replyLevel == '1' ? 3 : 999,
-            overflow: TextOverflow.ellipsis,
-            TextSpan(
-              children: [
-                if (replyItem!.isTop!)
-                  const WidgetSpan(
-                    alignment: PlaceholderAlignment.top,
-                    child: PBadge(
-                      text: 'TOP',
-                      size: 'small',
-                      stack: 'normal',
-                      type: 'line',
-                      fs: 9,
-                    ),
-                  ),
-                buildContent(context, replyItem!, replyReply, null),
-              ],
-            ),
-          ),
+          child: Semantics(
+              label: replyItem?.content?.message ?? "",
+              child: Text.rich(
+                style: const TextStyle(height: 1.75),
+                maxLines:
+                    replyItem!.content!.isText! && replyLevel == '1' ? 3 : 999,
+                overflow: TextOverflow.ellipsis,
+                TextSpan(
+                  children: [
+                    if (replyItem!.isTop!)
+                      const WidgetSpan(
+                        alignment: PlaceholderAlignment.top,
+                        child: PBadge(
+                          text: 'TOP',
+                          size: 'small',
+                          stack: 'normal',
+                          type: 'line',
+                          fs: 9,
+                        ),
+                      ),
+                    buildContent(context, replyItem!, replyReply, null),
+                  ],
+                ),
+              )),
         ),
         // 操作区域
         bottonAction(context, replyItem!.replyControl),
@@ -464,6 +468,9 @@ class ReplyItemRow extends StatelessWidget {
 
 InlineSpan buildContent(
     BuildContext context, replyItem, replyReply, fReplyItem) {
+  final String routePath = Get.currentRoute;
+  bool isVideoPage = routePath.startsWith('/video');
+
   // replyItem 当前回复内容
   // replyReply 查看二楼回复（回复详情）回调
   // fReplyItem 父级回复内容，用作二楼回复（回复详情）展示
@@ -505,15 +512,16 @@ InlineSpan buildContent(
       .replaceAll('&quot;', '"')
       .replaceAll('&apos;', "'")
       .replaceAll('&nbsp;', ' ');
-  // print("content.jumpUrl.keys:" + content.jumpUrl.keys.toString());
   // 构建正则表达式
   final List<String> specialTokens = [
     ...content.emote.keys,
     ...content.topicsMeta?.keys?.map((e) => '#$e#') ?? [],
     ...content.atNameToMid.keys.map((e) => '@$e'),
-    ...content.jumpUrl.keys.map((e) =>
-        e.replaceAll('?', '\\?').replaceAll('+', '\\+').replaceAll('*', '\\*')),
   ];
+  List<dynamic> jumpUrlKeysList = content.jumpUrl.keys.map((e) {
+    return e.replaceAllMapped(
+        RegExp(r'[?+*]'), (match) => '\\${match.group(0)}');
+  }).toList();
 
   String patternStr = specialTokens.map(RegExp.escape).join('|');
   if (patternStr.isNotEmpty) {
@@ -573,27 +581,31 @@ InlineSpan buildContent(
         spanChilds.add(
           TextSpan(
             text: ' $matchStr ',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            style: isVideoPage
+                ? TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  )
+                : null,
             recognizer: TapGestureRecognizer()
               ..onTap = () {
                 // 跳转到指定位置
-                try {
-                  SmartDialog.showToast('跳转至：$matchStr');
-                  Get.find<VideoDetailController>(tag: Get.arguments['heroTag'])
-                      .plPlayerController
-                      .seekTo(
-                        Duration(seconds: Utils.duration(matchStr)),
-                      );
-                } catch (e) {
-                  SmartDialog.showToast('跳转失败: $e');
+                if (isVideoPage) {
+                  try {
+                    SmartDialog.showToast('跳转至：$matchStr');
+                    Get.find<VideoDetailController>(
+                            tag: Get.arguments['heroTag'])
+                        .plPlayerController
+                        .seekTo(
+                          Duration(seconds: Utils.duration(matchStr)),
+                        );
+                  } catch (e) {
+                    SmartDialog.showToast('跳转失败: $e');
+                  }
                 }
               },
           ),
         );
       } else {
-        print("matchStr=$matchStr");
         String appUrlSchema = '';
         final bool enableWordRe = setting.get(SettingBoxKey.enableWordRe,
             defaultValue: false) as bool;

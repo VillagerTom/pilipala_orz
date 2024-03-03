@@ -45,7 +45,9 @@ class _ContentState extends State<Content> {
     if (len == 1) {
       OpusPicsModel pictureItem = pics.first;
       picList.add(pictureItem.url!);
-      spanChilds.add(const TextSpan(text: '\n'));
+
+      /// 图片上方的空白间隔
+      // spanChilds.add(const TextSpan(text: '\n'));
       spanChilds.add(
         WidgetSpan(
           child: LayoutBuilder(
@@ -191,13 +193,16 @@ class _ContentState extends State<Content> {
                 /// fix 默认20px高度
                 style: const TextStyle(height: 0),
                 richNode(widget.item, context),
-                maxLines: widget.source == 'detail' ? 999 : 3,
+                maxLines: 999,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
           if (hasPics) ...[
-            Text.rich(picsNodes()),
+            Text.rich(
+              picsNodes(),
+              semanticsLabel: '动态图片',
+            ),
           ]
         ],
       ),

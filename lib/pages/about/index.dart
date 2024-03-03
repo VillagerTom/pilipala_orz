@@ -50,9 +50,10 @@ class _AboutPageState extends State<AboutPage> {
         children: [
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 150),
-            child: Image.asset(
+            child: ExcludeSemantics(
+                child: Image.asset(
               'assets/images/logo/logo_android_2.png',
-            ),
+            )),
           ),
           ListTile(
             title: Text('PiliPalaX',
@@ -61,11 +62,21 @@ class _AboutPageState extends State<AboutPage> {
                     .textTheme
                     .titleMedium!
                     .copyWith(height: 2)),
-            subtitle: Text(
-              '使用Flutter开发的哔哩哔哩第三方客户端',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.outline),
-            ),
+            subtitle: Row(children: [
+              const Spacer(),
+              Text(
+                '使用Flutter开发的B站第三方客户端',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                semanticsLabel: '与你一起，发现不一样的世界',
+              ),
+              const Icon(
+                Icons.accessibility_new,
+                semanticLabel: "无障碍适配",
+                size: 18,
+              ),
+              const Spacer(),
+            ]),
           ),
           Obx(
             () => ListTile(
@@ -104,7 +115,7 @@ class _AboutPageState extends State<AboutPage> {
           ),
           ListTile(
             onTap: () => _aboutController.githubUrl(),
-            title: const Text('Github'),
+            title: const Text('Github开源仓库'),
             trailing: Text(
               'github.com/orz12/pilipala',
               style: subTitleStyle,
@@ -121,7 +132,7 @@ class _AboutPageState extends State<AboutPage> {
           ),
           ListTile(
             onTap: () => _aboutController.qqGroup(),
-            title: const Text('QQ群'),
+            title: const Text('QQ群：392176105'),
             trailing: Icon(
               Icons.arrow_forward_ios,
               size: 16,
@@ -143,7 +154,7 @@ class _AboutPageState extends State<AboutPage> {
           ),
           ListTile(
             onTap: () => _aboutController.aPay(),
-            title: const Text('赞助'),
+            title: const Text('赞赏'),
             trailing: Icon(Icons.arrow_forward_ios, size: 16, color: outline),
           ),
           ListTile(
@@ -156,12 +167,42 @@ class _AboutPageState extends State<AboutPage> {
               var cleanStatus = await CacheManage().clearCacheAll();
               if (cleanStatus) {
                 getCacheSize();
-                  SmartDialog.showToast('清除成功');
+                SmartDialog.showToast('清除成功');
               }
             },
             title: const Text('清除缓存'),
             subtitle: Text('图片及网络缓存 $cacheSize', style: subTitleStyle),
           ),
+          ListTile(
+            title: const Text('重置所有设置'),
+            onTap: () {
+              SmartDialog.show(
+                useSystem: true,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('重置所有设置'),
+                    content: const Text('是否重置所有设置？'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          SmartDialog.dismiss();
+                        },
+                        child: const Text('取消'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          GStrorage.setting.clear();
+                          SmartDialog.showToast('重置成功');
+                          SmartDialog.dismiss();
+                        },
+                        child: const Text('确定'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          )
         ],
       ),
     );
@@ -207,7 +248,7 @@ class AboutController extends GetxController {
     String buildNumber = currentInfo.buildNumber;
     //if is android
     if (Platform.isAndroid) {
-      buildNumber = buildNumber.substring(0,buildNumber.length - 1);
+      buildNumber = buildNumber.substring(0, buildNumber.length - 1);
     }
     currentVersion.value = "${currentInfo.version}+$buildNumber";
   }
@@ -217,6 +258,9 @@ class AboutController extends GetxController {
     var result = await Request().get(Api.latestApp, extra: {'ua': 'pc'});
     if (result.data.isEmpty) {
       SmartDialog.showToast('检查更新失败，github接口未返回数据，请检查网络');
+      return false;
+    } else if (result.data[0] == null) {
+      SmartDialog.showToast('检查更新失败，github接口返回如下内容：\n${result.data}');
       return false;
     }
     data = LatestDataModel.fromJson(result.data[0]);
@@ -262,12 +306,35 @@ class AboutController extends GetxController {
       ),
     );
   }
+
   // 问题反馈
   feedback() {
-    launchUrl(
-      Uri.parse('https://github.com/orz12/pilipala/issues'),
-      // 系统自带浏览器打开
-      mode: LaunchMode.externalApplication,
+    SmartDialog.show(
+      useSystem: true,
+      animationType: SmartAnimationType.centerFade_otherSlide,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('问题反馈'),
+          actions: [
+            ElevatedButton(
+              onPressed: () => launchUrl(
+                Uri.parse('https://github.com/orz12/pilipala/issues'),
+                // 系统自带浏览器打开
+                mode: LaunchMode.externalApplication,
+              ),
+              child: const Text('GitHub Issue'),
+            ),
+            ElevatedButton(
+              onPressed: () => launchUrl(
+                Uri.parse('https://support.qq.com/embed/phone/637735'),
+                // 系统自带浏览器打开
+                mode: LaunchMode.externalApplication,
+              ),
+              child: const Text('腾讯兔小巢'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -277,6 +344,15 @@ class AboutController extends GetxController {
       const ClipboardData(text: '392176105'),
     );
     SmartDialog.showToast('已复制QQ群号');
+    try {
+      launchUrl(
+        Uri.parse(
+            'mqqapi://card/show_pslcard?src_type=internal&version=1&uin=392176105&card_type=group&source=qrcode'),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
   // tg频道
@@ -307,7 +383,7 @@ class AboutController extends GetxController {
     try {
       launchUrl(
         Uri.parse(
-            'alipayqr://platformapi/startapp?saId=10000007&qrcode=https://qr.alipay.com/fkx12886sndepheaukiabc8'),
+            'https://pilipalanet.mysxl.cn/pilipalaxadmire'),
         mode: LaunchMode.externalApplication,
       );
     } catch (e) {
