@@ -27,7 +27,7 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
   final MediaController _mediaController = Get.put(MediaController());
 
   int? _lastSelectTime; //上次点击时间
-  Box setting = GStrorage.setting;
+  Box setting = GStorage.setting;
   late bool enableMYBar;
   late bool useSideBar;
   late bool enableGradientBg;
@@ -39,10 +39,9 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
     _mainController.pageController =
         PageController(initialPage: _mainController.selectedIndex);
     enableMYBar = setting.get(SettingBoxKey.enableMYBar, defaultValue: true);
-    useSideBar =
-        setting.get(SettingBoxKey.useSideBar, defaultValue: false);
-    enableGradientBg = setting.get(SettingBoxKey.enableGradientBg,
-        defaultValue: true);
+    useSideBar = setting.get(SettingBoxKey.useSideBar, defaultValue: false);
+    enableGradientBg =
+        setting.get(SettingBoxKey.enableGradientBg, defaultValue: true);
   }
 
   void setIndex(int value) async {
@@ -102,7 +101,7 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() async {
-    await GStrorage.close();
+    await GStorage.close();
     EventBus().off(EventName.loginEvent);
     super.dispose();
   }
@@ -152,7 +151,7 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
             children: [
               if (useSideBar) ...[
                 SizedBox(
-                    width: 55,
+                    width: 55 + MediaQuery.of(context).padding.left,
                     child: NavigationRail(
                       groupAlignment: 0.0,
                       minWidth: 40.0,
@@ -170,8 +169,11 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
                                           DynamicBadgeMode.number
                                       ? Text(e['count'].toString())
                                       : null,
-                                  padding:
-                                      const EdgeInsets.fromLTRB(2, 0, 2, 0),
+                                  padding: EdgeInsets.fromLTRB(
+                                      2 + MediaQuery.of(context).padding.left,
+                                      0,
+                                      2,
+                                      0),
                                   isLabelVisible:
                                       _mainController.dynamicBadgeType !=
                                               DynamicBadgeMode.hidden &&

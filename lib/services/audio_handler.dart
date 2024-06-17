@@ -26,7 +26,7 @@ Future<VideoPlayerServiceHandler> initAudioService() async {
 
 class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
   static final List<MediaItem> _item = [];
-  Box setting = GStrorage.setting;
+  Box setting = GStorage.setting;
   bool enableBackgroundPlay = true;
   // PlPlayerController player = PlPlayerController.getInstance();
 
@@ -148,8 +148,8 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     if (mediaItem == null) return;
     // print("exist: ${PlPlayerController.instanceExists()}");
     if (!PlPlayerController.instanceExists()) return;
-    setMediaItem(mediaItem);
     _item.add(mediaItem);
+    setMediaItem(mediaItem);
   }
 
   onVideoDetailDispose() {
@@ -164,15 +164,14 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     }
     if (_item.isNotEmpty) {
       setMediaItem(_item.last);
+      stop();
     } else {
-      mediaItem?.close();
+      clear();
     }
-    stop();
   }
 
   clear() {
     if (!enableBackgroundPlay) return;
-
     mediaItem.add(null);
     playbackState.add(PlaybackState(
       processingState: AudioProcessingState.idle,

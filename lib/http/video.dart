@@ -23,11 +23,11 @@ import 'init.dart';
 /// 返回{'status': bool, 'data': List}
 /// view层根据 status 判断渲染逻辑
 class VideoHttp {
-  static Box localCache = GStrorage.localCache;
-  static Box setting = GStrorage.setting;
+  static Box localCache = GStorage.localCache;
+  static Box setting = GStorage.setting;
   static bool enableRcmdDynamic =
       setting.get(SettingBoxKey.enableRcmdDynamic, defaultValue: true);
-  static Box userInfoCache = GStrorage.userInfo;
+  static Box userInfoCache = GStorage.userInfo;
 
   // 首页推荐视频
   static Future rcmdVideoList({required int ps, required int freshIdx}) async {
@@ -322,10 +322,10 @@ class VideoHttp {
 
   // （取消）点踩
   static Future dislikeVideo({required String bvid, required bool type}) async {
-    String? accessKey = GStrorage.localCache
+    String? accessKey = GStorage.localCache
         .get(LocalCacheKey.accessKey, defaultValue: {})['value'];
     if (accessKey == null || accessKey == "") {
-      return {'status': false, 'data': [], 'msg': "本操作使用app端接口，请前往【隐私设置】刷新access_key"};
+      return {'status': false, 'msg': "本操作使用app端接口，请前往【隐私设置】刷新access_key"};
     }
     var res = await Request().post(
       Api.dislikeVideo,
@@ -337,9 +337,74 @@ class VideoHttp {
     );
     print(res);
     if (res.data is! String && res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return {'status': true};
     } else {
-      return {'status': false, 'data': [], 'msg': res.data['message']};
+      return {
+        'status': false,
+        'msg': res.data is String ? res.data : res.data['message']
+      };
+    }
+  }
+
+  // 推送不感兴趣反馈
+  static Future feedDislike(
+      {required String goto,
+      required int id,
+      int? reasonId,
+      int? feedbackId}) async {
+    String? accessKey = GStorage.localCache
+        .get(LocalCacheKey.accessKey, defaultValue: {})['value'];
+    if (accessKey == null || accessKey == "") {
+      return {'status': false, 'msg': "本操作使用app端接口，请前往【隐私设置】刷新access_key"};
+    }
+    assert((reasonId != null) ^ (feedbackId != null));
+    var res = await Request().get(Api.feedDislike, data: {
+      'goto': goto,
+      'id': id,
+      // 'mid': mid,
+      if (reasonId != null) 'reason_id': reasonId,
+      if (feedbackId != null) 'feedback_id': feedbackId,
+      'build': 1,
+      'mobi_app': 'android',
+      'access_key': accessKey,
+      'appkey': Constants.appKey,
+    });
+    print(res);
+    if (res.data['code'] == 0) {
+      return {'status': true};
+    } else {
+      return {'status': false, 'msg': res.data['message']};
+    }
+  }
+
+  // 推送不感兴趣取消
+  static Future feedDislikeCancel(
+      {required String goto,
+      required int id,
+      int? reasonId,
+      int? feedbackId}) async {
+    String? accessKey = GStorage.localCache
+        .get(LocalCacheKey.accessKey, defaultValue: {})['value'];
+    if (accessKey == null || accessKey == "") {
+      return {'status': false, 'msg': "本操作使用app端接口，请前往【隐私设置】刷新access_key"};
+    }
+    // assert ((reasonId != null) ^ (feedbackId != null));
+    var res = await Request().get(Api.feedDislikeCancel, data: {
+      'goto': goto,
+      'id': id,
+      // 'mid': mid,
+      if (reasonId != null) 'reason_id': reasonId,
+      if (feedbackId != null) 'feedback_id': feedbackId,
+      'build': 1,
+      'mobi_app': 'android',
+      'access_key': accessKey,
+      'appkey': Constants.appKey,
+    });
+    print(res);
+    if (res.data['code'] == 0) {
+      return {'status': true};
+    } else {
+      return {'status': false, 'msg': res.data['message']};
     }
   }
 
@@ -444,10 +509,11 @@ class VideoHttp {
       're_src': reSrc,
       'csrf': await Request.getCsrf(),
     });
+    print(res);
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return {'status': true};
     } else {
-      return {'status': false, 'data': []};
+      return {'status': false, 'msg': res.data['message']};
     }
   }
 

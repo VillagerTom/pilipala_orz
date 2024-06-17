@@ -49,8 +49,8 @@ class _HeaderControlState extends State<HeaderControl> {
   static const TextStyle subTitleStyle = TextStyle(fontSize: 12);
   static const TextStyle titleStyle = TextStyle(fontSize: 14);
   Size get preferredSize => const Size(double.infinity, kToolbarHeight);
-  final Box<dynamic> localCache = GStrorage.localCache;
-  final Box<dynamic> videoStorage = GStrorage.video;
+  final Box<dynamic> localCache = GStorage.localCache;
+  final Box<dynamic> videoStorage = GStorage.video;
   double buttonSpace = 8;
   bool isFullScreen = false;
   late String heroTag;
@@ -1168,7 +1168,9 @@ class _HeaderControlState extends State<HeaderControl> {
     final _ = widget.controller!;
     // final bool isLandscape =
     //     MediaQuery.of(context).orientation == Orientation.landscape;
-
+    bool equivalentFullScreen = !isFullScreen &&
+        !horizontalScreen &&
+        MediaQuery.of(context).orientation == Orientation.landscape;
     return LayoutBuilder(builder: (context, boxConstraints) {
       return AppBar(
         backgroundColor: Colors.transparent,
@@ -1203,12 +1205,29 @@ class _HeaderControlState extends State<HeaderControl> {
                     }
                   },
                 )),
+            if (!isFullScreen ||
+                    MediaQuery.of(context).orientation != Orientation.portrait)
+              SizedBox(
+                  width: 42,
+                  height: 34,
+                  child: IconButton(
+                    tooltip: '返回主页',
+                    icon: const Icon(
+                      FontAwesomeIcons.house,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      // 销毁播放器实例
+                      // await widget.controller!.dispose(type: 'all');
+                      if (mounted) {
+                        Navigator.popUntil(
+                            context, (Route<dynamic> route) => route.isFirst);
+                      }
+                    },
+                  )),
             if ((videoIntroController.videoDetail.value.title != null) &&
-                (isFullScreen ||
-                    (!isFullScreen &&
-                        MediaQuery.of(context).orientation ==
-                            Orientation.landscape &&
-                        !horizontalScreen))) ...[
+                (isFullScreen || equivalentFullScreen))
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1248,35 +1267,9 @@ class _HeaderControlState extends State<HeaderControl> {
                     )
                 ],
               ),
-            ] else ...[
-              SizedBox(
-                  width: 42,
-                  height: 34,
-                  child: IconButton(
-                    tooltip: '返回主页',
-                    icon: const Icon(
-                      FontAwesomeIcons.house,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                    onPressed: () async {
-                      // 销毁播放器实例
-                      // await widget.controller!.dispose(type: 'all');
-                      if (mounted) {
-                        Navigator.popUntil(
-                            context, (Route<dynamic> route) => route.isFirst);
-                      }
-                    },
-                  )),
-            ],
             const Spacer(),
-            if ((isFullScreen &&
-                    MediaQuery.of(context).orientation ==
-                        Orientation.landscape) ||
-                (!isFullScreen &&
-                    MediaQuery.of(context).orientation ==
-                        Orientation.landscape &&
-                    !horizontalScreen)) ...[
+            if (MediaQuery.of(context).orientation == Orientation.landscape &&
+                (isFullScreen || !horizontalScreen)) ...[
               // const Spacer(),
               // show current datetime
               Obx(

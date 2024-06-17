@@ -31,7 +31,7 @@ class _StyleSettingState extends State<StyleSetting> {
   final ColorSelectController colorSelectController =
       Get.put(ColorSelectController());
 
-  Box setting = GStrorage.setting;
+  Box setting = GStorage.setting;
   late int picQuality;
   late ThemeType _tempThemeValue;
   late double maxRowWidth;
@@ -88,6 +88,7 @@ class _StyleSettingState extends State<StyleSetting> {
             leading: Icon(Icons.chrome_reader_mode_outlined),
             setKey: SettingBoxKey.useSideBar,
             defaultVal: false,
+            needReboot: true,
           ),
           const SetSwitchItem(
             title: 'MD3样式底栏',
@@ -342,7 +343,7 @@ class _StyleSettingState extends State<StyleSetting> {
           ),
           ListTile(
             dense: false,
-            onTap: () => settingController.seteDefaultHomePage(context),
+            onTap: () => settingController.setDefaultHomePage(context),
             leading: const Icon(Icons.home_outlined),
             title: Text('默认启动页', style: titleStyle),
             subtitle: Obx(() => Text(

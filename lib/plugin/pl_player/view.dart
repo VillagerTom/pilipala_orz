@@ -83,7 +83,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   final RxDouble _distance = 0.0.obs;
   final RxBool _volumeInterceptEventStream = false.obs;
 
-  Box setting = GStrorage.setting;
+  Box setting = GStorage.setting;
   late FullScreenMode mode;
   late int defaultBtmProgressBehavior;
   late bool enableQuickDouble;
@@ -145,7 +145,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     widget.controller.bottomControl = widget.bottomControl;
     widget.controller.danmuWidget = widget.danmuWidget;
     defaultBtmProgressBehavior = setting.get(SettingBoxKey.btmProgressBehavior,
-        defaultValue: BtmProgresBehavior.values.first.code);
+        defaultValue: BtmProgressBehavior.values.first.code);
     enableQuickDouble =
         setting.get(SettingBoxKey.enableQuickDouble, defaultValue: true);
     fullScreenGestureReverse = setting
@@ -895,15 +895,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               return Container();
             }
             if (defaultBtmProgressBehavior ==
-                BtmProgresBehavior.alwaysHide.code) {
+                BtmProgressBehavior.alwaysHide.code) {
               return const SizedBox();
             }
             if (defaultBtmProgressBehavior ==
-                    BtmProgresBehavior.onlyShowFullScreen.code &&
+                    BtmProgressBehavior.onlyShowFullScreen.code &&
                 !_.isFullScreen.value) {
               return const SizedBox();
             } else if (defaultBtmProgressBehavior ==
-                    BtmProgresBehavior.onlyHideFullScreen.code &&
+                    BtmProgressBehavior.onlyHideFullScreen.code &&
                 _.isFullScreen.value) {
               return const SizedBox();
             }
@@ -1043,7 +1043,12 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         Obx(() {
           if (_.dataStatus.loading || _.isBuffering.value) {
             return Center(
-              child: Container(
+              child: GestureDetector(
+                onTap: () {
+                  _.refreshPlayer();
+                },
+                child:
+              Container(
                 padding: const EdgeInsets.all(30),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
@@ -1057,7 +1062,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   semanticLabel: "加载中",
                 ),
               ),
-            );
+            ));
           } else {
             return const SizedBox();
           }

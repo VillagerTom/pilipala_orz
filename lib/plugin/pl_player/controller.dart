@@ -26,9 +26,9 @@ import 'package:universal_platform/universal_platform.dart';
 import '../../models/video/play/subtitle.dart';
 // import 'package:wakelock_plus/wakelock_plus.dart';
 
-Box videoStorage = GStrorage.video;
-Box setting = GStrorage.setting;
-Box localCache = GStrorage.localCache;
+Box videoStorage = GStorage.video;
+Box setting = GStorage.setting;
+Box localCache = GStorage.localCache;
 
 class PlPlayerController {
   Player? _videoPlayerController;
@@ -101,6 +101,8 @@ class PlPlayerController {
   int _cid = 0;
   int _heartDuration = 0;
   bool _enableHeart = true;
+
+  late DataSource dataSource;
   final RxList<Map<String, String>> _vttSubtitles = <Map<String, String>>[].obs;
   final RxInt _vttSubtitlesIndex = 0.obs;
 
@@ -165,7 +167,7 @@ class PlPlayerController {
   /// [videoPlayerController] instance of Player
   Player? get videoPlayerController => _videoPlayerController;
 
-  /// [videoController] instace of Player
+  /// [videoController] instance of Player
   VideoController? get videoController => _videoController;
 
   Rx<bool> get isSliderMoving => _isSliderMoving;
@@ -287,9 +289,8 @@ class PlPlayerController {
   }
 
   static Future<void> playIfExists(
-      {bool repeat = false, bool hideControls = true, dynamic duration}) async {
-    await _instance?.play(
-        repeat: repeat, hideControls: hideControls, duration: duration);
+      {bool repeat = false, bool hideControls = true}) async {
+    await _instance?.play(repeat: repeat, hideControls: hideControls);
   }
 
   // try to get PlayerStatus
@@ -411,6 +412,7 @@ class PlPlayerController {
     bool enableHeart = true,
   }) async {
     try {
+      this.dataSource = dataSource;
       _autoPlay = autoplay;
       _looping = looping;
       // 初始化视频倍速
@@ -595,11 +597,20 @@ class PlPlayerController {
     return player;
   }
 
+  Future refreshPlayer() async {
+    Duration currentPos = _position.value;
+    await _videoPlayerController?.open(
+      Media(
+        dataSource.videoSource!,
+        httpHeaders: dataSource.httpHeaders,
+      ),
+      play: true,
+    );
+    seekTo(currentPos);
+  }
+
   // 开始播放
-  Future _initializePlayer({
-    Duration seekTo = Duration.zero,
-    Duration? duration,
-  }) async {
+  Future _initializePlayer({Duration seekTo = Duration.zero}) async {
     if (_instance == null) return;
     // 设置倍速
     if (videoType.value == 'live') {
@@ -623,13 +634,13 @@ class PlPlayerController {
 
     // 自动播放
     if (_autoPlay) {
-      await playIfExists(duration: duration);
+      await playIfExists();
       // await play(duration: duration);
     }
   }
 
   Future<void> autoEnterFullscreen() async {
-    bool autoEnterFullscreen = GStrorage.setting
+    bool autoEnterFullscreen = GStorage.setting
         .get(SettingBoxKey.enableAutoEnter, defaultValue: false);
     if (autoEnterFullscreen) {
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -724,7 +735,7 @@ class PlPlayerController {
         }),
         onPositionChanged.listen((event) {
           EasyThrottle.throttle(
-              'mediaServicePositon',
+              'mediaServicePosition',
               const Duration(seconds: 1),
               () => videoPlayerServiceHandler.onPositionChange(event));
         }),
@@ -817,21 +828,16 @@ class PlPlayerController {
 
   /// 播放视频
   /// TODO  _duration.value丢失
-  Future<void> play(
-      {bool repeat = false, bool hideControls = true, dynamic duration}) async {
+  Future<void> play({bool repeat = false, bool hideControls = true}) async {
     if (_playerCount.value == 0) return;
     // 播放时自动隐藏控制条
     controls = !hideControls;
     // repeat为true，将从头播放
     if (repeat) {
-      await seekTo(Duration.zero);
+      // await seekTo(Duration.zero);
+      await seekTo(Duration.zero, type: "slider");
     }
 
-    /// 临时fix _duration.value丢失
-    if (duration != null) {
-      _duration.value = duration;
-      updateDurationSecond();
-    }
     await _videoPlayerController?.play();
 
     await getCurrentVolume();
@@ -945,10 +951,10 @@ class PlPlayerController {
     }
   }
 
-  Future<void> setBrightness(double brightnes) async {
+  Future<void> setBrightness(double brightness) async {
     try {
-      brightness.value = brightnes;
-      ScreenBrightness().setScreenBrightness(brightnes);
+      this.brightness.value = brightness;
+      ScreenBrightness().setScreenBrightness(brightness);
       // setVideoBrightness();
     } catch (e) {
       throw 'Failed to set brightness';
@@ -1102,6 +1108,8 @@ class PlPlayerController {
   Future<void> triggerFullScreen({bool status = true}) async {
     FullScreenMode mode = FullScreenModeCode.fromCode(
         setting.get(SettingBoxKey.fullScreenMode, defaultValue: 0))!;
+    bool removeSafeArea = setting.get(SettingBoxKey.videoPlayerRemoveSafeArea,
+        defaultValue: false);
     if (!isFullScreen.value && status) {
       // StatusBarControl.setHidden(true, animation: StatusBarAnimation.FADE);
       hideStatusBar();
@@ -1124,7 +1132,7 @@ class PlPlayerController {
       }
     } else if (isFullScreen.value && !status) {
       // StatusBarControl.setHidden(false, animation: StatusBarAnimation.FADE);
-      showStatusBar();
+      if (!removeSafeArea) showStatusBar();
       toggleFullScreen(false);
       if (mode == FullScreenMode.none) {
         return;

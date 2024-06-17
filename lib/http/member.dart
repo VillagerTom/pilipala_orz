@@ -416,7 +416,8 @@ class MemberHttp {
     var authCodeRes = await getTVCode();
     if (authCodeRes['status']) {
       SmartDialog.showLoading(msg: "正在确认登录...");
-      var confirmRes = await Request().post(Api.qrcodeConfirm, queryParameters: {
+      var confirmRes =
+          await Request().post(Api.qrcodeConfirm, queryParameters: {
         'auth_code': authCodeRes['data'],
         'local_id': '0',
         'build': 1442100,
@@ -430,7 +431,8 @@ class MemberHttp {
         return {
           'status': false,
           'data': [],
-          'msg': "确认登录失败：${confirmRes.data['message']}",
+          'msg':
+              "确认登录失败：${confirmRes.data['message']}\n\n请在设置中退出账号，重启app，重新登录再试",
         };
       }
       SmartDialog.showLoading(msg: "等待500毫秒...");
@@ -440,12 +442,12 @@ class MemberHttp {
       var res = await qrcodePoll(authCodeRes['data']);
       SmartDialog.dismiss();
       if (res['status']) {
-        return {'status': true, 'data': [], 'msg': res['message']};
+        return {'status': true, 'data': [], 'msg': res['msg']};
       } else {
         return {
           'status': false,
           'data': [],
-          'msg': "登录结果获取失败：${res.data['message']}",
+          'msg': "登录结果获取失败：${res.data['msg']}",
         };
       }
     } else {
@@ -473,12 +475,16 @@ class MemberHttp {
         .post(Api.qrcodePoll, queryParameters: {...params, 'sign': sign});
     if (res.data['code'] == 0) {
       String accessKey = res.data['data']['access_token'];
-      Box localCache = GStrorage.localCache;
-      Box userInfoCache = GStrorage.userInfo;
+      Box localCache = GStorage.localCache;
+      Box userInfoCache = GStorage.userInfo;
       var userInfo = userInfoCache.get('userInfoCache');
       localCache.put(
           LocalCacheKey.accessKey, {'mid': userInfo.mid, 'value': accessKey});
-      return {'status': true, 'data': [], 'message': '操作成功，当前获取的access_key为：$accessKey'};
+      return {
+        'status': true,
+        'data': [],
+        'msg': '操作成功，当前获取的access_key为：$accessKey'
+      };
     } else {
       return {
         'status': false,

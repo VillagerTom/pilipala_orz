@@ -51,7 +51,7 @@ class _VideoReplyNewDialogState extends State<VideoReplyNewDialog>
     // 自动聚焦
     _autoFocus();
     // 监听聚焦状态
-    _focuslistener();
+    _focusListener();
   }
 
   _autoFocus() async {
@@ -61,7 +61,7 @@ class _VideoReplyNewDialogState extends State<VideoReplyNewDialog>
     }
   }
 
-  _focuslistener() {
+  _focusListener() {
     replyContentFocusNode.addListener(() {
       if (replyContentFocusNode.hasFocus) {
         setState(() {
@@ -238,7 +238,7 @@ class _VideoReplyNewDialogState extends State<VideoReplyNewDialog>
             width: double.infinity,
             height: toolbarType == 'input' ? keyboardHeight : emoteHeight,
             child: EmotePanel(
-              onChoose: (package, emote) => onChooseEmote(package, emote),
+              onChoose: onChooseEmote,
             ),
           ),
           if (toolbarType == 'input' && keyboardHeight == 0.0)
