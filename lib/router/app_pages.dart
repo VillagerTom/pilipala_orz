@@ -26,7 +26,7 @@ import '../pages/hot/index.dart';
 import '../pages/html/index.dart';
 import '../pages/later/index.dart';
 import '../pages/live_room/view.dart';
-import '../pages/login/index.dart';
+import '../pages/login/index.dart'; // TODO Flavor FOSS
 import '../pages/media/index.dart';
 import '../pages/member/index.dart';
 import '../pages/member_archive/index.dart';
