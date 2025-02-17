@@ -37,7 +37,7 @@ jobs:
       - name: 解析push事件信息
         id: analyze_push_event
         run: |
-          included_commits=$(jq -r '.commits[] | "\(.id) \(.message | split("\n") | .[0])"' ${{ github.event_path }} | jq -Rs '.')
+          included_commits=$(jq -r '.commits[] | "\(.id | .[:8]) \(.message | split("\n") | .[0])"' ${{ github.event_path }} | jq -Rs '.')
           last_commit_hash=$(git log -1 --pretty="%H" --first-parent)
           echo "included_commits=$included_commits" >> $GITHUB_OUTPUT
           echo "last_commit_hash=$last_commit_hash" >> $GITHUB_OUTPUT
